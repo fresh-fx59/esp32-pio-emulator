@@ -6,7 +6,44 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-(Nothing yet — Tier 2 (sensor TDD + pytest-embedded plugin) is next.)
+(Nothing yet — Tier 3 (networked ESP32 — WiFi, HTTP, MQTT) is next.)
+
+## [0.3.0] — 2026-05-05
+
+### Added
+- **Tier 2 — Sensor TDD + pytest-embedded plugin alpha shipped.**
+- I2C: two-bus simulator + `Wire` / `Wire1` fakes; attachable `I2CDevice`
+  peripherals; full TwoWire API.
+- SPI: two-bus simulator + `SPI` fake; CS-routed `SpiDevice` peripherals.
+- ADC: per-pin analog values, resolution + attenuation, `analogRead*`.
+- PWM/LEDC: 16 channels, `ledcSetup`/`ledcAttachPin`/`ledcWrite`/`analogWrite`.
+- Hardware timers: `hw_timer_t` API backed by `VirtualClock`; one-shot +
+  autoreload + 4-pool.
+- Peripheral fakes: **DS3231 RTC** (Maxim, I2C, BCD time/date + alarm +
+  temperature), **BMP280** (Bosch, I2C, calibration + pressure/temp),
+  **MCP23017** (Microchip, I2C, 16-bit I/O expander).
+- `pytest-pio-emulator` plugin (alpha): subprocess + stdout-only
+  `dut.expect()` API; pytest11 entry point. Per [ADR-0004](docs/decisions/0004-pytest-plugin-control-channel.md),
+  control channel deferred to T2.5.
+- `examples/04-rtc-moisture-logger/` — load-bearing T2 acceptance: same
+  sketch driven by both Unity and pytest-embedded.
+- `examples/05-pwm-fade/` — LEDC sweep demo.
+- 8 docs: `fake-an-i2c-sensor`, `use-pytest-embedded`, `peripherals`,
+  `fake-vs-mock-vs-emulate`, `add-a-new-peripheral-fake`,
+  `pytest-plugin-architecture`, ADR-0004, plus all Diátaxis subfolder
+  READMEs updated.
+
+### Changed
+- Repository layout: peripherals moved from `peripherals/<name>/` to
+  `src/peripherals/<name>/` and `include/peripherals/` for PIO library
+  packaging compatibility (T2 spec drift; consumer ergonomics simpler).
+- Umbrella header `<esp32sim/esp32sim.h>` now pulls in all T2 sub-headers
+  (i2c, adc, pwm, spi).
+
+### Notes
+- 110 framework tests + 5 example tests (3 + 2 in 04 + 05) + 6 plugin
+  tests = 121 total tests, all green.
+- macOS-13 still deferred from CI per master spec D12.
 
 ## [0.2.0] — 2026-05-05
 
