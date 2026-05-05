@@ -23,7 +23,7 @@ void check_begin(const HardwareSerial* s, const char* api, int uart_num) {
             "%s on Serial%d called before Serial%d.begin() — "
             "output will be silently discarded on real hardware",
             api, uart_num, uart_num);
-        esp32sim::Strict::instance().violation("ESP_SIM_E010", buf);
+        esp32sim::Strict::instance().violation("ESP_SIM_E010", buf, esp32sim::Severity::WARNING);
     }
 }
 }  // namespace

@@ -39,7 +39,8 @@ int WiFiClass::RSSI() {
         esp32sim::Strict::instance().violation(
             "ESP_SIM_E050",
             "WiFi.RSSI() called before WiFi is connected — value is meaningless "
-            "until WiFi.begin() has succeeded");
+            "until WiFi.begin() has succeeded",
+            esp32sim::Severity::WARNING);
     }
     return net.rssi();
 }
@@ -50,7 +51,8 @@ IPAddress WiFiClass::localIP() {
         esp32sim::Strict::instance().violation(
             "ESP_SIM_E050",
             "WiFi.localIP() called before WiFi is connected — returns 0.0.0.0 "
-            "until WiFi.begin() has succeeded");
+            "until WiFi.begin() has succeeded",
+            esp32sim::Severity::WARNING);
     }
     auto ip = net.local_ip();
     int a = 0, b = 0, c = 0, d = 0;

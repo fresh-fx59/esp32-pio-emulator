@@ -16,7 +16,7 @@ bool Preferences::begin(const char* ns, bool /*read_only*/) {
                 "Preferences.begin('%s') — NVS namespace must be ≤15 characters "
                 "(this one is %zu)",
                 ns, len);
-            strict.violation("ESP_SIM_E061", buf);
+            strict.violation("ESP_SIM_E061", buf, esp32sim::Severity::WARNING);
         }
     }
     ns_ = ns ? ns : "";

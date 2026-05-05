@@ -22,9 +22,20 @@
 
 namespace esp32sim {
 
+// Severity of a contract violation:
+//   ERROR    — definitely wrong; will cause real-hardware misbehavior, silent
+//              data loss, crash, or brick. Tests should fail on these.
+//   WARNING  — fragile or suboptimal pattern; works at runtime but is worth
+//              flagging. Tests typically surface these as info, not failure.
+enum class Severity : uint8_t {
+    ERROR = 0,
+    WARNING = 1,
+};
+
 struct Violation {
     std::string code;        // "ESP_SIM_E001"
     std::string message;     // human-readable, includes context (pin, addr, etc.)
+    Severity severity = Severity::ERROR;
     uint64_t timestamp_us = 0;  // virtual time when triggered
 };
 
@@ -36,15 +47,25 @@ public:
     void enable(bool e = true) { enabled_ = e; }
     bool enabled() const { return enabled_; }
 
-    void violation(const std::string& code, const std::string& message);
+    // Default severity = ERROR for back-compat with v1.1 callers.
+    void violation(const std::string& code, const std::string& message,
+                   Severity severity = Severity::ERROR);
 
     const std::vector<Violation>& all() const { return violations_; }
+    std::vector<Violation> errors() const;
+    std::vector<Violation> warnings() const;
+
     bool any() const { return !violations_.empty(); }
+    bool has_errors() const;
+    bool has_warnings() const;
+
     bool has(const std::string& code) const;
     size_t count() const { return violations_.size(); }
     size_t count(const std::string& code) const;
+    size_t error_count() const;
+    size_t warning_count() const;
 
-    // Pretty-print all violations to stdout (used by verify CLI / reports).
+    // Pretty-print all violations to stdout (errors first, warnings second).
     void print_report() const;
 
 private:

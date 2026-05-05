@@ -17,7 +17,8 @@ bool PubSubClient::publish(const char* topic, const char* payload) {
             esp32sim::Strict::instance().violation(
                 "ESP_SIM_E052",
                 std::string("PubSubClient::publish on disconnected client (topic=") +
-                (topic ? topic : "") + ") — message will be silently dropped");
+                (topic ? topic : "") + ") — message will be silently dropped",
+                esp32sim::Severity::WARNING);
         }
         return false;
     }

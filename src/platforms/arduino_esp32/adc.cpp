@@ -19,7 +19,7 @@ int analogRead(uint8_t pin) {
             "analogRead on GPIO %d which is not ADC-capable on ESP32-S3 "
             "(ADC1: GPIO 1-10, ADC2: GPIO 11-20)",
             (int)pin);
-        esp32sim::Strict::instance().violation("ESP_SIM_E004", buf);
+        esp32sim::Strict::instance().violation("ESP_SIM_E004", buf, esp32sim::Severity::WARNING);
     }
     return esp32sim::Adc::instance().get_value((int)pin);
 }

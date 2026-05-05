@@ -63,6 +63,18 @@ void check_flash_pin(int pin, const char* api) {
     }
 }
 
+void check_usb_jtag_pin(int pin, const char* api) {
+    if (is_usb_jtag_pin_s3(pin)) {
+        char buf[180];
+        std::snprintf(buf, sizeof(buf),
+            "%s on GPIO %d which is wired to the on-chip USB-JTAG bridge on "
+            "ESP32-S3 — using it as GPIO disables USB-JTAG debugging on this board",
+            api, pin);
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E007", buf, esp32sim::Severity::WARNING);
+    }
+}
+
 }  // namespace
 
 extern "C" {
@@ -71,13 +83,14 @@ void pinMode(uint8_t pin, uint8_t mode) {
     if (esp32sim::Strict::instance().enabled()) {
         check_pin_in_range((int)pin, "pinMode");
         check_flash_pin((int)pin, "pinMode");
+        check_usb_jtag_pin((int)pin, "pinMode");
         if (is_strapping_pin_s3((int)pin)) {
             char buf[160];
             std::snprintf(buf, sizeof(buf),
                 "pinMode on GPIO %d which is a strapping pin on ESP32-S3 — "
                 "may interfere with boot/flash mode selection",
                 (int)pin);
-            esp32sim::Strict::instance().violation("ESP_SIM_E006", buf);
+            esp32sim::Strict::instance().violation("ESP_SIM_E006", buf, esp32sim::Severity::WARNING);
         }
     }
     esp32sim::PinRegistry::instance().set_mode((int)pin, translate_mode(mode));

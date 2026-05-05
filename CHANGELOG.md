@@ -8,6 +8,37 @@ All notable changes to this project will be documented in this file. The format 
 
 (Nothing yet.)
 
+## [1.2.0] — 2026-05-05 — Severity classification + USB-JTAG rule
+
+### Added
+- **`Severity` distinction (ERROR vs WARNING).** Each violation carries a
+  severity. Errors mean the firmware is definitely broken; warnings mean
+  fragile/suboptimal patterns that work at runtime but are worth flagging.
+- New API on `esp32sim::Strict`:
+  - `errors()` / `warnings()` — filtered violation views.
+  - `has_errors()` / `has_warnings()`.
+  - `error_count()` / `warning_count()`.
+  - `print_report()` now lists errors and warnings in separate sections.
+- New rule `ESP_SIM_E007` (WARNING) — `pinMode` on GPIO 19 or 20 (the
+  USB-JTAG D-/D+ lines on ESP32-S3) disables USB-JTAG debugging on the
+  board. Caught while verifying the user's `iot-yc-water-the-flowers`
+  sketch which uses GPIO 19 for the water-level sensor.
+- Test pattern in docs: fail tests only on errors; surface warnings as
+  info. (`if (s.has_errors()) TEST_FAIL_MESSAGE(...)`).
+- 6 new tests covering severity classification + the E007 rule.
+
+### Changed
+- Reclassified existing rules:
+  - **ERROR (12 rules):** E001, E002, E003, E020, E021, E022, E040, E051,
+    E060, E070, E071, E080, E081.
+  - **WARNING (8 rules):** E004, E006, E007 (new), E010, E050, E052, E061.
+- `Strict::violation` signature now takes an optional `Severity` arg
+  (default = ERROR for back-compat with v1.1 callers).
+
+### Notes
+- 187 tests passing total (150 v1.0 + 37 strict-mode rules incl.
+  severity classification).
+
 ## [1.1.0] — 2026-05-05 — Strict mode (autonomous verification)
 
 ### Added — autonomous chip-contract verification

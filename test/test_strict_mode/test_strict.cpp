@@ -240,6 +240,71 @@ void test_count_by_code(void) {
     TEST_ASSERT_EQUAL_size_t(2, esp32sim::Strict::instance().count("ESP_SIM_E001"));
 }
 
+// ============================================================
+// Severity classification (v1.2)
+// ============================================================
+
+void test_E001_is_classified_ERROR(void) {
+    digitalWrite(2, HIGH);
+    auto errors = esp32sim::Strict::instance().errors();
+    TEST_ASSERT_GREATER_OR_EQUAL_size_t(1, errors.size());
+    bool found_error = false;
+    for (auto& v : errors) {
+        if (v.code == "ESP_SIM_E001") {
+            TEST_ASSERT_EQUAL_INT((int)esp32sim::Severity::ERROR, (int)v.severity);
+            found_error = true;
+        }
+    }
+    TEST_ASSERT_TRUE(found_error);
+}
+
+void test_E006_strapping_pin_is_WARNING(void) {
+    pinMode(0, OUTPUT);  // strapping pin
+    auto& strict = esp32sim::Strict::instance();
+    TEST_ASSERT_TRUE(strict.has_warnings());
+    auto warnings = strict.warnings();
+    bool found = false;
+    for (auto& w : warnings) {
+        if (w.code == "ESP_SIM_E006") {
+            TEST_ASSERT_EQUAL_INT((int)esp32sim::Severity::WARNING, (int)w.severity);
+            found = true;
+        }
+    }
+    TEST_ASSERT_TRUE(found);
+}
+
+void test_E007_USB_JTAG_pin_GPIO19(void) {
+    pinMode(19, OUTPUT);
+    TEST_ASSERT_TRUE(esp32sim::Strict::instance().has("ESP_SIM_E007"));
+    TEST_ASSERT_TRUE(esp32sim::Strict::instance().has_warnings());
+}
+
+void test_E007_USB_JTAG_pin_GPIO20(void) {
+    pinMode(20, OUTPUT);
+    TEST_ASSERT_TRUE(esp32sim::Strict::instance().has("ESP_SIM_E007"));
+}
+
+void test_errors_and_warnings_separated(void) {
+    digitalWrite(2, HIGH);          // ERROR (E001)
+    Wire.beginTransmission(0x99);   // ERROR (E021)
+    pinMode(19, INPUT);             // WARNING (E007 USB-JTAG)
+    auto& strict = esp32sim::Strict::instance();
+    TEST_ASSERT_TRUE(strict.has_errors());
+    TEST_ASSERT_TRUE(strict.has_warnings());
+    TEST_ASSERT_GREATER_OR_EQUAL_size_t(2, strict.error_count());
+    TEST_ASSERT_GREATER_OR_EQUAL_size_t(1, strict.warning_count());
+}
+
+void test_clean_sketch_no_errors_or_warnings(void) {
+    pinMode(5, OUTPUT);
+    digitalWrite(5, HIGH);
+    Serial.begin(115200);
+    Serial.println("ok");
+    auto& strict = esp32sim::Strict::instance();
+    TEST_ASSERT_FALSE(strict.has_errors());
+    TEST_ASSERT_FALSE(strict.has_warnings());
+}
+
 int main(int /*argc*/, char** /*argv*/) {
     UNITY_BEGIN();
     // GPIO
@@ -282,5 +347,12 @@ int main(int /*argc*/, char** /*argv*/) {
     RUN_TEST(test_strict_mode_off_records_nothing);
     RUN_TEST(test_violations_carry_timestamp);
     RUN_TEST(test_count_by_code);
+    // Severity classification (v1.2)
+    RUN_TEST(test_E001_is_classified_ERROR);
+    RUN_TEST(test_E006_strapping_pin_is_WARNING);
+    RUN_TEST(test_E007_USB_JTAG_pin_GPIO19);
+    RUN_TEST(test_E007_USB_JTAG_pin_GPIO20);
+    RUN_TEST(test_errors_and_warnings_separated);
+    RUN_TEST(test_clean_sketch_no_errors_or_warnings);
     return UNITY_END();
 }
