@@ -13,8 +13,8 @@ public:
     // Real arduino-esp32 begin signature has many optional params; T1 keeps
     // it simple and ignores baud/config since the sim has no electrical
     // representation.
-    void begin(unsigned long /*baud*/) {}
-    void end(void) {}
+    void begin(unsigned long /*baud*/);
+    void end(void) { began_ = false; }
     void flush(void) {}
 
     // Print API
@@ -40,8 +40,12 @@ public:
     int read(void);
     int peek(void);
 
+    bool began() const { return began_; }
+    void reset_began() { began_ = false; }
+
 private:
     int uart_num_;
+    bool began_ = false;
     void emit_(const char* s);
 };
 

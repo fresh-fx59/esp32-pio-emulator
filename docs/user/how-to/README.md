@@ -14,3 +14,4 @@ to accomplish a concrete task. They're *task-oriented* (per [Diátaxis](https://
 - [`test-deep-sleep.md`](test-deep-sleep.md) (T4)
 - [`test-ble-provisioning.md`](test-ble-provisioning.md) (T4)
 - [`test-with-littlefs.md`](test-with-littlefs.md) (T4)
+- [`use-strict-mode.md`](use-strict-mode.md) (v1.1) — autonomous chip-contract verification, no test authoring

@@ -1,9 +1,26 @@
 #include <Arduino.h>
 #include <esp32sim/adc.h>
+#include <esp32sim/strict.h>
+
+#include <cstdio>
+
+namespace {
+bool is_adc_pin_s3(int pin) {
+    return pin >= 1 && pin <= 20;  // ADC1: 1-10, ADC2: 11-20 on ESP32-S3
+}
+}  // namespace
 
 extern "C" {
 
 int analogRead(uint8_t pin) {
+    if (esp32sim::Strict::instance().enabled() && !is_adc_pin_s3((int)pin)) {
+        char buf[160];
+        std::snprintf(buf, sizeof(buf),
+            "analogRead on GPIO %d which is not ADC-capable on ESP32-S3 "
+            "(ADC1: GPIO 1-10, ADC2: GPIO 11-20)",
+            (int)pin);
+        esp32sim::Strict::instance().violation("ESP_SIM_E004", buf);
+    }
     return esp32sim::Adc::instance().get_value((int)pin);
 }
 

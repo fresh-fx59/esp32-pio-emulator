@@ -1,4 +1,5 @@
 #include <HardwareSerial.h>
+#include <esp32sim/strict.h>
 #include <esp32sim/uart.h>
 
 #include <cstdarg>
@@ -10,7 +11,25 @@ HardwareSerial Serial(0);
 HardwareSerial Serial1(1);
 HardwareSerial Serial2(2);
 
+void HardwareSerial::begin(unsigned long /*baud*/) {
+    began_ = true;
+}
+
+namespace {
+void check_begin(const HardwareSerial* s, const char* api, int uart_num) {
+    if (esp32sim::Strict::instance().enabled() && !s->began()) {
+        char buf[160];
+        std::snprintf(buf, sizeof(buf),
+            "%s on Serial%d called before Serial%d.begin() — "
+            "output will be silently discarded on real hardware",
+            api, uart_num, uart_num);
+        esp32sim::Strict::instance().violation("ESP_SIM_E010", buf);
+    }
+}
+}  // namespace
+
 void HardwareSerial::emit_(const char* s) {
+    check_begin(this, "Serial.print/write", uart_num_);
     auto& u = esp32sim::UartChannel::for_index(uart_num_);
     while (*s) u.tx_write_byte(static_cast<uint8_t>(*s++));
 }
@@ -105,6 +124,7 @@ size_t HardwareSerial::printf(const char* fmt, ...) {
 }
 
 size_t HardwareSerial::write(uint8_t b) {
+    check_begin(this, "Serial.write", uart_num_);
     esp32sim::UartChannel::for_index(uart_num_).tx_write_byte(b);
     return 1;
 }
@@ -127,6 +147,7 @@ int HardwareSerial::available(void) {
 }
 
 int HardwareSerial::read(void) {
+    check_begin(this, "Serial.read", uart_num_);
     return esp32sim::UartChannel::for_index(uart_num_).rx_read_byte();
 }
 

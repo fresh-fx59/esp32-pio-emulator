@@ -1,6 +1,7 @@
 #include <HTTPClient.h>
 #include <esp32sim/event_log.h>
 #include <esp32sim/network.h>
+#include <esp32sim/strict.h>
 
 namespace {
 // Stash the last request method/body so they're discoverable via the event
@@ -9,6 +10,12 @@ namespace {
 }
 
 int HTTPClient::execute_(const std::string& method, const std::string& body) {
+    if (esp32sim::Strict::instance().enabled() && url_.empty()) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E051",
+            std::string("HTTPClient::") + method + "() called without a prior "
+            "HTTPClient::begin(url) — request URL is empty");
+    }
     // Record the request as a ready-to-inspect side effect.
     esp32sim::Network::instance().mqtt_record_publish(
         std::string("HTTP:") + method + " " + url_, body);

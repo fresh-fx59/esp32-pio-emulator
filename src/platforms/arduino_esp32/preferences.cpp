@@ -1,13 +1,46 @@
 #include <Preferences.h>
 #include <esp32sim/storage.h>
+#include <esp32sim/strict.h>
+
+#include <cstdio>
+
+bool Preferences::begin(const char* ns, bool /*read_only*/) {
+    auto& strict = esp32sim::Strict::instance();
+    if (strict.enabled() && ns) {
+        // NVS namespace limit is 15 chars + null per the IDF nvs.h API contract.
+        size_t len = 0;
+        while (ns[len] && len < 32) ++len;
+        if (len > 15) {
+            char buf[160];
+            std::snprintf(buf, sizeof(buf),
+                "Preferences.begin('%s') — NVS namespace must be ≤15 characters "
+                "(this one is %zu)",
+                ns, len);
+            strict.violation("ESP_SIM_E061", buf);
+        }
+    }
+    ns_ = ns ? ns : "";
+    opened_ = true;
+    return true;
+}
 
 bool Preferences::clear() {
+    if (esp32sim::Strict::instance().enabled() && !opened_) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E060",
+            "Preferences.clear() called without prior Preferences.begin()");
+    }
     if (!opened_) return false;
     esp32sim::Nvs::instance().clear_namespace(ns_);
     return true;
 }
 
 size_t Preferences::putString(const char* key, const char* value) {
+    if (esp32sim::Strict::instance().enabled() && !opened_) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E060",
+            "Preferences.putString called without prior Preferences.begin()");
+    }
     if (!opened_ || !key || !value) return 0;
     esp32sim::Nvs::instance().set_string(ns_, key, value);
     return std::string(value).size();

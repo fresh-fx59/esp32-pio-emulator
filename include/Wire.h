@@ -29,8 +29,17 @@ public:
     int peek();
     void flush() {}
 
+    bool in_transmission() const { return in_transmission_; }
+    void reset_state() {
+        in_transmission_ = false;
+        tx_len_ = 0;
+        rx_len_ = 0;
+        rx_pos_ = 0;
+    }
+
 private:
     int bus_num_;
+    bool in_transmission_ = false;
     uint8_t tx_addr_ = 0;
     uint8_t tx_buf_[64] = {};
     size_t tx_len_ = 0;

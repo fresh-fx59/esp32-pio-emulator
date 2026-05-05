@@ -10,6 +10,7 @@ solve a problem.
 - [`sim-api.md`](sim-api.md) — the `esp32sim::Sim::*` API (T1).
 - [`supported-arduino-apis.md`](supported-arduino-apis.md) — what works (T1).
 - [`peripherals.md`](peripherals.md) — DS3231, BMP280, MCP23017 fakes (T2).
+- [`strict-mode.md`](strict-mode.md) — autonomous chip-contract enforcement (v1.1).
 
 *Coming later:*
 - T2.5: `sim-control-protocol.md`

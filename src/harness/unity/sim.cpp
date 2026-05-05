@@ -1,5 +1,8 @@
 #include <esp32sim_unity/esp32sim.h>
 
+#include <HardwareSerial.h>
+#include <Wire.h>
+
 extern "C" void setup(void);
 extern "C" void loop(void);
 
@@ -24,6 +27,13 @@ void Sim::reset() {
     Sleep::instance().reset();
     Rtos::instance().reset();
     Ble::instance().reset();
+    Strict::instance().reset();
+    // Reset Arduino-side global object state so it doesn't leak across tests.
+    Wire.reset_state();
+    Wire1.reset_state();
+    Serial.reset_began();
+    Serial1.reset_began();
+    Serial2.reset_began();
 }
 
 void Sim::runSetup() { setup(); }

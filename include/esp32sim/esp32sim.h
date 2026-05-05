@@ -13,4 +13,5 @@
 #include <esp32sim/sleep.h>
 #include <esp32sim/spi.h>
 #include <esp32sim/storage.h>
+#include <esp32sim/strict.h>
 #include <esp32sim/uart.h>

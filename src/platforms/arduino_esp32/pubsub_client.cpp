@@ -1,5 +1,6 @@
 #include <PubSubClient.h>
 #include <esp32sim/network.h>
+#include <esp32sim/strict.h>
 
 #include <cstring>
 
@@ -11,7 +12,15 @@ bool PubSubClient::connect(const char* /*client_id*/) {
 void PubSubClient::disconnect() { connected_ = false; }
 
 bool PubSubClient::publish(const char* topic, const char* payload) {
-    if (!connected_) return false;
+    if (!connected_) {
+        if (esp32sim::Strict::instance().enabled()) {
+            esp32sim::Strict::instance().violation(
+                "ESP_SIM_E052",
+                std::string("PubSubClient::publish on disconnected client (topic=") +
+                (topic ? topic : "") + ") — message will be silently dropped");
+        }
+        return false;
+    }
     esp32sim::Network::instance().mqtt_record_publish(
         topic ? topic : "", payload ? payload : "");
     return true;

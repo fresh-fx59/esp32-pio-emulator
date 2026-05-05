@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include <esp32sim/network.h>
+#include <esp32sim/strict.h>
 
 #include <cstdio>
 
@@ -32,10 +33,26 @@ uint8_t WiFiClass::status() {
     return WL_IDLE_STATUS;
 }
 
-int WiFiClass::RSSI() { return esp32sim::Network::instance().rssi(); }
+int WiFiClass::RSSI() {
+    auto& net = esp32sim::Network::instance();
+    if (esp32sim::Strict::instance().enabled() && net.wifi_state() != esp32sim::WifiState::CONNECTED) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E050",
+            "WiFi.RSSI() called before WiFi is connected — value is meaningless "
+            "until WiFi.begin() has succeeded");
+    }
+    return net.rssi();
+}
 
 IPAddress WiFiClass::localIP() {
-    auto ip = esp32sim::Network::instance().local_ip();
+    auto& net = esp32sim::Network::instance();
+    if (esp32sim::Strict::instance().enabled() && net.wifi_state() != esp32sim::WifiState::CONNECTED) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E050",
+            "WiFi.localIP() called before WiFi is connected — returns 0.0.0.0 "
+            "until WiFi.begin() has succeeded");
+    }
+    auto ip = net.local_ip();
     int a = 0, b = 0, c = 0, d = 0;
     std::sscanf(ip.c_str(), "%d.%d.%d.%d", &a, &b, &c, &d);
     return IPAddress((uint8_t)a, (uint8_t)b, (uint8_t)c, (uint8_t)d);

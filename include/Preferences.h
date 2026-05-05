@@ -8,11 +8,7 @@
 
 class Preferences {
 public:
-    bool begin(const char* ns, bool /*read_only*/ = false) {
-        ns_ = ns ? ns : "";
-        opened_ = true;
-        return true;
-    }
+    bool begin(const char* ns, bool /*read_only*/ = false);
     void end() { opened_ = false; }
     bool clear();
 

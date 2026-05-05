@@ -1,5 +1,6 @@
 #include <BLEDevice.h>
 #include <esp32sim/ble.h>
+#include <esp32sim/strict.h>
 
 #include <memory>
 #include <vector>
@@ -17,6 +18,11 @@ void BLEDevice::init(const std::string& device_name) {
 }
 
 BLEServer* BLEDevice::createServer() {
+    if (esp32sim::Strict::instance().enabled() && !esp32sim::Ble::instance().initialized()) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E080",
+            "BLEDevice::createServer() called before BLEDevice::init()");
+    }
     servers.push_back(std::make_unique<BLEServer>());
     return servers.back().get();
 }
@@ -27,6 +33,11 @@ BLEAdvertising* BLEDevice::getAdvertising() {
 }
 
 BLEService* BLEServer::createService(const std::string& uuid) {
+    if (esp32sim::Strict::instance().enabled() && !esp32sim::Ble::instance().initialized()) {
+        esp32sim::Strict::instance().violation(
+            "ESP_SIM_E081",
+            "BLEServer::createService() called before BLEDevice::init()");
+    }
     esp32sim::Ble::instance().add_service(uuid);
     services.push_back(std::make_unique<BLEService>(uuid));
     return services.back().get();

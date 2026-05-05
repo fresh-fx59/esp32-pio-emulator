@@ -6,7 +6,49 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-(Nothing yet — v1.0 shipped.)
+(Nothing yet.)
+
+## [1.1.0] — 2026-05-05 — Strict mode (autonomous verification)
+
+### Added — autonomous chip-contract verification
+
+The framework's value proposition expands: drop a sketch in, enable strict
+mode, the sim runs `setup()` + `loop()` against the chip's contract and
+reports violations. **Zero test authoring required.**
+
+- New `esp32sim::Strict` singleton with `enable`/`reset`/`violation`/
+  `all`/`has`/`count`/`print_report` API.
+- ~20 chip-contract rules encoded as runtime checks inside existing fakes:
+  - **GPIO:** E001 (digitalWrite without pinMode), E002 (flash pin use),
+    E003 (pin out of range), E004 (analogRead on non-ADC pin), E006
+    (strapping pin warning).
+  - **Serial:** E010 (use before begin).
+  - **I2C:** E020 (write outside transmission), E021 (7-bit addr violation),
+    E022 (nested beginTransmission).
+  - **Time:** E040 (delayMicroseconds > 16383 hw limit).
+  - **WiFi/network:** E050 (read state before begin), E051 (HTTP without
+    begin), E052 (MQTT publish on disconnected client).
+  - **Storage:** E060 (Preferences use without begin), E061 (namespace too
+    long).
+  - **PWM:** E070 (ledcWrite without setup), E071 (channel out of range).
+  - **BLE:** E080 (createServer before init), E081 (createService before
+    init).
+- All rules sourced from authoritative documents (ESP32-S3 datasheet,
+  ESP-IDF programming guide, arduino-esp32 docs); each violation includes a
+  human-readable message and the virtual timestamp at which it fired.
+- New docs: `user/reference/strict-mode.md` (rule index + sources),
+  `user/how-to/use-strict-mode.md` (the zero-authoring pattern).
+- 31 new unit tests for the strict-mode rules; total framework now at
+  **181 tests, all green**.
+- Sim::reset now also resets stateful Arduino globals (Wire, Wire1, Serial,
+  Serial1, Serial2) so strict-mode rule state doesn't leak across tests.
+
+### Notes
+- Strict mode is **opt-in** (`Strict::instance().enable()`); existing tests
+  unaffected.
+- Future v1.2+ will add rules requiring source-level analysis: `millis()`
+  rollover antipattern, ISR-context detection, return-value-ignored
+  patterns, resource-leak detection.
 
 ## [1.0.0] — 2026-05-05 — **🚀 v1.0**
 
