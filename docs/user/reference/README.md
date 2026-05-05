@@ -9,7 +9,8 @@ solve a problem.
 
 - [`sim-api.md`](sim-api.md) — the `esp32sim::Sim::*` API (T1).
 - [`supported-arduino-apis.md`](supported-arduino-apis.md) — what works (T1).
+- [`peripherals.md`](peripherals.md) — DS3231, BMP280, MCP23017 fakes (T2).
 
 *Coming later:*
-- T2: `peripherals.md`, `sim-control-protocol.md`
+- T2.5: `sim-control-protocol.md`
 - T4: `full-api-coverage.md`

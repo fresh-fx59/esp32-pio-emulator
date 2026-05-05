@@ -7,8 +7,9 @@ to accomplish a concrete task. They're *task-oriented* (per [Diátaxis](https://
 ## Contents
 
 - [`test-an-interrupt-driven-sketch.md`](test-an-interrupt-driven-sketch.md) (T1)
+- [`fake-an-i2c-sensor.md`](fake-an-i2c-sensor.md) (T2)
+- [`use-pytest-embedded.md`](use-pytest-embedded.md) (T2)
 
 *Coming later:*
-- T2: `fake-an-i2c-sensor.md`, `use-pytest-embedded.md`
 - T3: `test-a-wifi-sketch.md`, `test-mqtt.md`
 - T4: `test-deep-sleep.md`, `test-ble-provisioning.md`, `test-with-littlefs.md`
