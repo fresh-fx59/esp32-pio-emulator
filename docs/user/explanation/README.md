@@ -6,9 +6,10 @@ their mental model, not to do or learn a specific thing.
 
 ## Contents
 
-(Empty until T1.)
+- [`why-virtual-time.md`](why-virtual-time.md) (T1)
+- [`what-this-does-and-doesnt-catch.md`](what-this-does-and-doesnt-catch.md) (T1)
+- [`our-framework-vs-arduinofake.md`](our-framework-vs-arduinofake.md) (T1)
 
-- *Coming in T1:* `why-virtual-time.md`, `what-this-does-and-doesnt-catch.md`,
-  `our-framework-vs-arduinofake.md`
-- *Coming in T2:* `fake-vs-mock-vs-emulate.md`
-- *Coming in T4:* `dual-core-and-rtos-fidelity.md`, `variant-fidelity.md`
+*Coming later:*
+- T2: `fake-vs-mock-vs-emulate.md`
+- T4: `dual-core-and-rtos-fidelity.md`, `variant-fidelity.md`

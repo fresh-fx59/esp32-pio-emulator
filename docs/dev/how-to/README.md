@@ -4,7 +4,7 @@ Recipes for common contributor tasks. *Task-oriented* (per [Diátaxis](https://d
 
 ## Contents
 
-(Empty until T1.)
+- [`add-a-new-arduino-api.md`](add-a-new-arduino-api.md) (T1) — pattern for adding more Arduino functions.
 
-- *Coming in T1:* `add-a-new-arduino-api.md`
-- *Coming in T2:* `add-a-new-peripheral-fake.md`, `add-a-platform-adapter.md`
+*Coming later:*
+- T2: `add-a-new-peripheral-fake.md`, `add-a-platform-adapter.md`

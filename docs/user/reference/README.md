@@ -7,8 +7,9 @@ solve a problem.
 
 ## Contents
 
-(Empty until T1.)
+- [`sim-api.md`](sim-api.md) — the `esp32sim::Sim::*` API (T1).
+- [`supported-arduino-apis.md`](supported-arduino-apis.md) — what works (T1).
 
-- *Coming in T1:* `sim-api.md` (the `ESP32Sim::*` API), `supported-arduino-apis.md`
-- *Coming in T2:* `peripherals.md`, `sim-control-protocol.md`
-- *Coming in T4:* `full-api-coverage.md`
+*Coming later:*
+- T2: `peripherals.md`, `sim-control-protocol.md`
+- T4: `full-api-coverage.md`

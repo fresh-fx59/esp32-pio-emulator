@@ -7,6 +7,4 @@ understand every detail yet. Tutorials commit to a happy path and don't list alt
 
 ## Contents
 
-(Empty until T1.)
-
-- *Coming in T1:* `your-first-test.md` — write your first GPIO test in 5 minutes.
+- [`your-first-test.md`](your-first-test.md) — write your first GPIO test in 5 minutes (T1).

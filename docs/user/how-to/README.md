@@ -6,9 +6,9 @@ to accomplish a concrete task. They're *task-oriented* (per [Diátaxis](https://
 
 ## Contents
 
-(Empty until T1.)
+- [`test-an-interrupt-driven-sketch.md`](test-an-interrupt-driven-sketch.md) (T1)
 
-- *Coming in T1:* `test-an-interrupt-driven-sketch.md`
-- *Coming in T2:* `fake-an-i2c-sensor.md`, `use-pytest-embedded.md`
-- *Coming in T3:* `test-a-wifi-sketch.md`, `test-mqtt.md`
-- *Coming in T4:* `test-deep-sleep.md`, `test-ble-provisioning.md`, `test-with-littlefs.md`
+*Coming later:*
+- T2: `fake-an-i2c-sensor.md`, `use-pytest-embedded.md`
+- T3: `test-a-wifi-sketch.md`, `test-mqtt.md`
+- T4: `test-deep-sleep.md`, `test-ble-provisioning.md`, `test-with-littlefs.md`
