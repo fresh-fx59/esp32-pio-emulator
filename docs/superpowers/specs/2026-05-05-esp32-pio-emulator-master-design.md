@@ -302,7 +302,7 @@ CI runs the full matrix on Linux and macOS (ESP32 dev population is overwhelming
 | D9 | C++ standard | `gnu++17` — modern, matches the user's mini-fork project, broadly supported by host compilers. | T0 `platformio.ini` |
 | D10 | Pre-commit hook framework | Use `pre-commit` (pre-commit.com) with `clang-format`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `ruff` (T2+) hooks. | T0 implementation |
 | D11 | Dockerfile for CI | Not in T0. GH Actions runners are sufficient. Revisit only if CI flakiness emerges. | This spec |
-| D12 | OS support matrix | Ubuntu 22.04+, macOS 13+. Windows via WSL2 documented as "should work, untested" until someone tries it. | This spec; CI matrix |
+| D12 | OS support matrix | Ubuntu 22.04+, macOS 13+ documented as **supported** for contributors and users. **CI matrix runs Ubuntu only in v0.x** — free GitHub Actions macOS runners queued 40+ min during T0 setup without starting (Ubuntu finished in 25s). macOS will be re-added to CI when T1 introduces any platform-sensitive code, or earlier if needed. Windows via WSL2 documented as "should work, untested." | This spec; CI matrix |
 
 ### Deferred
 
@@ -348,3 +348,4 @@ These are honest acceptance milestones because both projects are real, used, and
 |---|---|---|
 | 2026-05-05 | v0.1 | Initial draft after brainstorming + OSS research |
 | 2026-05-05 | v0.2 | Added §11.5 reference projects (test candidates from user's portfolio). Resolved D5/D6/D8/D9/D10/D11/D12 — promoted to "Resolved" subtable. Added new D8 (ArduinoFake coexistence), D9 (C++17), D10 (pre-commit), D11 (Dockerfile), D12 (OS support). ESP32-S3 set as primary target in §3. |
+| 2026-05-05 | v0.2.1 | D12 amended during T0 implementation — CI matrix narrowed to Ubuntu-only because macOS-13 free runners were queueing 40+ minutes. macOS remains a supported OS for contributors; CI coverage returns when there is platform-sensitive code to test. |
