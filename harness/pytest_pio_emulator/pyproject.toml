@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-pio-emulator"
+version = "0.1.0"
+description = "Pytest plugin for esp32-pio-emulator: spawns a PIO native test binary as a subprocess and exposes a dut fixture."
+requires-python = ">=3.10"
+authors = [{name = "fresh-fx59", email = "fresh.fx59@gmail.com"}]
+license = {text = "MIT"}
+dependencies = [
+    "pytest>=7.0",
+]
+
+[project.entry-points.pytest11]
+pio_emulator = "pytest_pio_emulator.plugin"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["pytest_pio_emulator*"]
