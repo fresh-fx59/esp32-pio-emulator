@@ -18,6 +18,7 @@ void Sim::reset() {
     EventLog::instance().reset();
     PinRegistry::instance().reset();
     UartChannel::reset_all();
+    Network::instance().reset();
 }
 
 void Sim::runSetup() { setup(); }
