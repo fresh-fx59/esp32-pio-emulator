@@ -13,7 +13,13 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, macos-13]
+        # macOS-13 dropped from the v0.x matrix: free GitHub Actions macOS
+        # runners were queueing for 40+ minutes without starting (Ubuntu jobs
+        # completed in 25-30s). We have no macOS-specific code yet — re-add
+        # macos-13 (or macos-14) to this matrix as soon as T1 introduces any
+        # platform-sensitive code, or earlier if a contributor needs the
+        # coverage.
+        os: [ubuntu-22.04]
 
     steps:
       - name: Checkout
