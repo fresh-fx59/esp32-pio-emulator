@@ -19,6 +19,9 @@ void Sim::reset() {
     PinRegistry::instance().reset();
     UartChannel::reset_all();
     Network::instance().reset();
+    Nvs::instance().reset();
+    FileSystem::instance().reset();
+    Sleep::instance().reset();
 }
 
 void Sim::runSetup() { setup(); }
