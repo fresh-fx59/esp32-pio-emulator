@@ -27,16 +27,15 @@
   ],
   "license": "MIT",
   "frameworks": ["arduino"],
-  "platforms": ["espressif32", "native"],
+  "platforms": ["native"],
   "dependencies": [],
   "headers": [
     "esp32sim/esp32sim.h"
   ],
   "export": {
     "include": [
-      "core",
-      "platforms",
-      "harness",
+      "src",
+      "include",
       "peripherals",
       "library.json",
       "LICENSE",
@@ -47,7 +46,9 @@
       "examples",
       "docs",
       ".github",
-      ".pio"
+      ".pio",
+      ".venv",
+      "harness/pytest_pio_emulator"
     ]
   }
 }
