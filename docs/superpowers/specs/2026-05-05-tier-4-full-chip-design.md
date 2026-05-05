@@ -2,13 +2,20 @@
 
 | | |
 |---|---|
-| **Status** | Architectural sketch — most decisions deferred until prior tiers ship |
+| **Status** | v0.2 — refreshed at T4 entry; implementation-ready (alpha scope) |
 | **Date** | 2026-05-05 |
 | **Parent** | [Master design](2026-05-05-esp32-pio-emulator-master-design.md) |
 | **Depends on** | [Tier 3](2026-05-05-tier-3-networked-design.md) shipped |
 | **Confidence** | Low — this spec is a roadmap, not an implementation guide. **Mandatory rewrite at T4 entry.** |
 
-> **Read this first.** This is the most speculative spec in the set. By the time T4 begins, T1–T3 will have taught us a lot, and this document will look naïve in places. **Per AGENTS.md spec-drift policy, T4 spec is rewritten as v0.2 before T4 implementation begins.** What's here is the *intent* and the *acceptance shape*, not the precise plan.
+> **v0.2 update (T4 entry, 2026-05-05):** Per AGENTS.md decide-under-uncertainty, the deferred decisions are now resolved:
+> - **D2 RTOS:** cooperative pseudo-scheduler (option a). Tasks yield at API boundaries (`vTaskDelay`, queue ops). No real preemption. Real-FreeRTOS POSIX port deferred indefinitely.
+> - **D7 BLE depth:** stub-level (option a). `BLEDevice::init`, advertising, addService recorded as state; no GATT peer fixture in the alpha. Behavioral BLE deferred to v1.x.
+> - **Bluetooth Classic:** stub only — most modern ESP32 IoT projects don't use it.
+> - **ULP coprocessor:** out of scope for v1.0; document as known gap.
+> - **Camera (esp32-cam):** out of scope.
+>
+> T4 alpha scope: LittleFS/SPIFFS in-memory, NVS/Preferences, deep-sleep + wake reasons, RMT stub, cooperative FreeRTOS shim, BLE stub. One reference example: a temperature logger with NVS-stored config + deep-sleep cycles.
 
 ## Goal
 
