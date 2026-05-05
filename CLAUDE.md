@@ -15,12 +15,12 @@ for the full design.
 
 ## Current state
 
-- **Active tier:** T2 (sensor TDD + pytest-embedded plugin) — starting. Refresh T2 spec to v0.2 first, then write T2 plan.
-- **Last shipped tier:** T1 GPIO TDD, sign-off 2026-05-05. CHANGELOG entry [0.2.0]. Tag v0.2.0.
-- **Last verified:** 60 framework unit tests + 9 example tests = 69 tests green locally and on Ubuntu CI. macOS CI deferred — see master spec D12.
+- **Active tier:** T3 (networked — WiFi, HTTP, MQTT) — starting. Refresh T3 spec to v0.2 first, then write T3 plan.
+- **Last shipped tier:** T2 sensor TDD + pytest-embedded plugin alpha, sign-off 2026-05-05. CHANGELOG entry [0.3.0]. Tag v0.3.0.
+- **Last verified:** 110 framework unit tests + 5 example tests + 6 plugin tests = 121 tests green.
 
-See [`docs/superpowers/specs/2026-05-05-tier-2-sensor-tdd-design.md`](docs/superpowers/specs/2026-05-05-tier-2-sensor-tdd-design.md)
-for the current T2 spec (still v0.1; refresh to v0.2 before writing the T2 plan, per spec-drift policy).
+See [`docs/superpowers/specs/2026-05-05-tier-3-networked-design.md`](docs/superpowers/specs/2026-05-05-tier-3-networked-design.md)
+for the current T3 spec (still v0.1 sketch; refresh to v0.2 before writing the T3 plan, per spec-drift policy).
 
 ## What lives where
 
