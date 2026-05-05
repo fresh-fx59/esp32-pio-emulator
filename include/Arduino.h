@@ -83,6 +83,10 @@ void    analogWrite(uint8_t pin, int val);  // 0-255, mapped onto channel 0
 // Real arduino-esp32 maps GPIO pin → interrupt number 1:1; we mirror that.
 // Inline so it links without a definition in any TU.
 inline uint8_t digitalPinToInterrupt(uint8_t pin) { return pin; }
+
+// Pull in hardware-timer declarations transitively (real arduino-esp32 does
+// the same via esp32-hal-timer.h).
+#include <esp32_hwtimer.h>
 #endif
 
 // Sketches expect setup() and loop() to be defined by the user. We declare
