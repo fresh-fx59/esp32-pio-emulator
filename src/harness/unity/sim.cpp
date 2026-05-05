@@ -22,6 +22,8 @@ void Sim::reset() {
     Nvs::instance().reset();
     FileSystem::instance().reset();
     Sleep::instance().reset();
+    Rtos::instance().reset();
+    Ble::instance().reset();
 }
 
 void Sim::runSetup() { setup(); }
