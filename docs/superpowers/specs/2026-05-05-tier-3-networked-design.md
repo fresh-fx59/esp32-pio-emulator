@@ -2,13 +2,13 @@
 
 | | |
 |---|---|
-| **Status** | Architectural sketch — to be sharpened at T3 entry |
+| **Status** | v0.2 — refreshed at T3 entry; implementation-ready |
 | **Date** | 2026-05-05 |
 | **Parent** | [Master design](2026-05-05-esp32-pio-emulator-master-design.md) |
 | **Depends on** | [Tier 2](2026-05-05-tier-2-sensor-tdd-design.md) shipped, including pytest-embedded plugin |
 | **Confidence** | Lower — many decisions deferred. Expect to spec-update before implementation. |
 
-> **Read this first.** This document captures the *shape* of T3, not the implementation. Several core architectural decisions (most notably the networking impl approach) are deliberately deferred — see §4 below. **Per AGENTS.md spec-drift policy, this spec gets rewritten via a v0.2 commit before T3 implementation begins.** Treat the v0.1 numbers and module names as illustrative, not load-bearing.
+> **v0.2 update:** ADR-resolved at T3 entry. **Path A (in-process recording, no real sockets) selected** — see §4 below for rationale. Scope tightened to MQTT + HTTP + WiFi state machine; NTP/mDNS/AP-mode deferred to T3.5. Reference example uses `examples/06-mqtt-temperature/`.
 
 ## Goal
 
@@ -59,11 +59,17 @@ Sketch links against real LWIP compiled for host. Tests provide tap devices or i
 
 **Cons:** Significantly more implementation complexity. Linux-leaning (tap devices). Slower test feedback. mireq's project shows this is doable but they've been at it for years and it still has limited peripheral coverage.
 
-### Recommendation (placeholder, not committed)
+### Decision (T3 entry, 2026-05-05)
 
-**Start Path A; reserve Path B for a future T3.5 if real-LWIP fidelity becomes blocker.** Path A gets us a usable T3 in months instead of a year, and Python-side mocks are the *normal* way networked-device tests are written in the embedded world.
+**Path A — but simplified for T3 alpha.** Specifically:
 
-This recommendation is **not** the final ADR. The ADR happens at T3 entry, after we've actually built T1 + T2 and know more.
+- WiFi state is in-process C++ (no real sockets, no Python fixture for the alpha).
+- `WiFiClient::connect`/`write`/`read` records to an `EventLog` event of kind `NETWORK_TXN`. Tests assert via `Sim::events().kind(NETWORK_TXN)`.
+- `HTTPClient::GET`/`POST` records the request method, URL, body, and headers to events.
+- A "fake response" registry lets tests pre-seed responses: `Sim::http().setResponse("https://...", 200, "{...}")`.
+- `PubSubClient` (or our own minimal MQTT class) records publishes/subscribes to events; subscribed-topic delivery is test-driven via `Sim::mqtt().deliver(topic, payload)`.
+
+This is event-recording, not full socket simulation. It catches *application-layer* bugs (wrong URL, wrong headers, wrong MQTT topic, payload format errors) without modeling TCP/IP. Real-LWIP fidelity (Path B) is captured as ADR-0005 deferred to T3.5+.
 
 ## Implementation sketch (illustrative)
 
