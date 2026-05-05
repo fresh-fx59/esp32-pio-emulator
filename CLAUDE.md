@@ -15,9 +15,9 @@ for the full design.
 
 ## Current state
 
-- **Active tier:** T3 (networked — WiFi, HTTP, MQTT) — starting. Refresh T3 spec to v0.2 first, then write T3 plan.
-- **Last shipped tier:** T2 sensor TDD + pytest-embedded plugin alpha, sign-off 2026-05-05. CHANGELOG entry [0.3.0]. Tag v0.3.0.
-- **Last verified:** 110 framework unit tests + 5 example tests + 6 plugin tests = 121 tests green.
+- **Active tier:** T4 (full chip — FS, NVS, deep-sleep, BLE, RTOS) — starting.
+- **Last shipped tier:** T3 networked, sign-off 2026-05-05. CHANGELOG [0.4.0]. Tag v0.4.0.
+- **Last verified:** ~136 tests green (T0-T3 inclusive).
 
 See [`docs/superpowers/specs/2026-05-05-tier-3-networked-design.md`](docs/superpowers/specs/2026-05-05-tier-3-networked-design.md)
 for the current T3 spec (still v0.1 sketch; refresh to v0.2 before writing the T3 plan, per spec-drift policy).

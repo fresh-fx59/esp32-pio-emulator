@@ -1,6 +1,6 @@
 # esp32-pio-emulator
 
-> Status: **Tier 3 starting** (T0/T1/T2 ✓ shipped 2026-05-05 v0.3.0) · License: MIT · ESP32-S3 primary target · gnu++17
+> Status: **Tier 4 starting** (T0/T1/T2/T3 ✓ shipped 2026-05-05 v0.4.0) · License: MIT · ESP32-S3 primary target · gnu++17
 
 A behavioral simulator for ESP32 firmware that runs natively on a developer's machine.
 Compile your unmodified Arduino sketch against host-side fakes of the ESP32 hardware
@@ -21,8 +21,8 @@ for design specs and [`docs/decisions/`](docs/decisions/) for ADRs.
 | T0 | Skeleton | ✓ shipped 2026-05-05 (v0.1.0) |
 | T1 | GPIO TDD | ✓ shipped 2026-05-05 (v0.2.0) |
 | T2 | Sensor TDD + pytest-embedded plugin | ✓ shipped 2026-05-05 (v0.3.0) |
-| T3 | Networked ESP32 (WiFi, HTTP, MQTT) | 🚧 next |
-| T4 | Full chip (filesystem, NVS, deep-sleep, BLE, RTOS) | ⏸ |
+| T3 | Networked ESP32 (WiFi, HTTP, MQTT) | ✓ shipped 2026-05-05 (v0.4.0) |
+| T4 | Full chip (filesystem, NVS, deep-sleep, BLE, RTOS) | 🚧 next |
 
 ## Getting started
 
