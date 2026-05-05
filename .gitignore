@@ -9,6 +9,7 @@ build/
 *.a
 *.exe
 *.out
+*.tar.gz
 
 # Editor
 .vscode/

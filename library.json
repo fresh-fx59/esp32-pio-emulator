@@ -1,0 +1,53 @@
+{
+  "name": "esp32-pio-emulator",
+  "version": "0.0.0",
+  "description": "Behavioral simulator for ESP32 firmware. Compile your unmodified Arduino sketch natively against host-side fakes; assert on observable behavior with Unity tests. Tier 0 skeleton — implementation begins at Tier 1 (GPIO).",
+  "keywords": [
+    "esp32",
+    "esp32-s3",
+    "arduino",
+    "testing",
+    "tdd",
+    "simulator",
+    "emulator",
+    "unity",
+    "native",
+    "host-test"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fresh-fx59/esp32-pio-emulator"
+  },
+  "authors": [
+    {
+      "name": "fresh-fx59",
+      "email": "fresh.fx59@gmail.com",
+      "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "frameworks": ["arduino"],
+  "platforms": ["espressif32", "native"],
+  "dependencies": [],
+  "headers": [
+    "esp32sim/esp32sim.h"
+  ],
+  "export": {
+    "include": [
+      "core",
+      "platforms",
+      "harness",
+      "peripherals",
+      "library.json",
+      "LICENSE",
+      "README.md"
+    ],
+    "exclude": [
+      "test",
+      "examples",
+      "docs",
+      ".github",
+      ".pio"
+    ]
+  }
+}
