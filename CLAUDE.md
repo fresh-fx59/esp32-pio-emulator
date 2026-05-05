@@ -15,10 +15,13 @@ for the full design.
 
 ## Current state
 
-- **Active tier:** T0 (skeleton). See [`docs/superpowers/specs/2026-05-05-tier-0-skeleton-design.md`](docs/superpowers/specs/2026-05-05-tier-0-skeleton-design.md)
-  and [`docs/superpowers/plans/2026-05-05-tier-0-skeleton.md`](docs/superpowers/plans/2026-05-05-tier-0-skeleton.md).
-- **Last committed work:** spec + ADR + plan drop, no implementation code yet.
-- **Next tier (T1):** GPIO TDD. Spec is written but will be refreshed at T1 entry.
+- **Active tier:** T1 (GPIO TDD) — starting. Refresh T1 spec to v0.2 first, then write T1 plan.
+- **Last shipped tier:** T0 skeleton, sign-off 2026-05-05. CHANGELOG entry [0.1.0].
+- **Last verified:** `pio test -e native` green locally (2 tests pass) and on Ubuntu CI.
+  macOS CI deferred — see master spec D12.
+
+See [`docs/superpowers/specs/2026-05-05-tier-1-gpio-tdd-design.md`](docs/superpowers/specs/2026-05-05-tier-1-gpio-tdd-design.md)
+for the T1 spec. Per the spec-drift policy, refresh it before writing the T1 plan.
 
 ## What lives where
 
