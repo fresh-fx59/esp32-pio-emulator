@@ -15,9 +15,18 @@ for the full design.
 
 ## Current state
 
-- **Active tier:** T4 (full chip — FS, NVS, deep-sleep, BLE, RTOS) — starting.
-- **Last shipped tier:** T3 networked, sign-off 2026-05-05. CHANGELOG [0.4.0]. Tag v0.4.0.
-- **Last verified:** ~136 tests green (T0-T3 inclusive).
+- **Active tier:** v1.0 SHIPPED. All four tiers complete. Project is at v1.0.0.
+- **Last shipped tier:** T4 full-chip (NVS, FS, deep-sleep, FreeRTOS shim, BLE stub).
+- **Last verified:** 162+ tests green across all tiers and examples.
+
+## Post-v1.0 work
+
+- T2.5: pytest-embedded control channel (per ADR-0004).
+- T3.5: real-LWIP networking (Path B, per ADR-0005 if filed).
+- T4.5: behavioral BLE with Python-side GATT peer fixture.
+- Variant matrix expansion (S2/C3/C6 first-class testing).
+- macOS-13 back into CI matrix (per master spec D12) once a contributor
+  needs it.
 
 See [`docs/superpowers/specs/2026-05-05-tier-3-networked-design.md`](docs/superpowers/specs/2026-05-05-tier-3-networked-design.md)
 for the current T3 spec (still v0.1 sketch; refresh to v0.2 before writing the T3 plan, per spec-drift policy).

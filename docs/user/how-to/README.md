@@ -11,6 +11,6 @@ to accomplish a concrete task. They're *task-oriented* (per [Diátaxis](https://
 - [`use-pytest-embedded.md`](use-pytest-embedded.md) (T2)
 - [`test-a-wifi-sketch.md`](test-a-wifi-sketch.md) (T3)
 - [`test-mqtt.md`](test-mqtt.md) (T3)
-
-*Coming later:*
-- T4: `test-deep-sleep.md`, `test-ble-provisioning.md`, `test-with-littlefs.md`
+- [`test-deep-sleep.md`](test-deep-sleep.md) (T4)
+- [`test-ble-provisioning.md`](test-ble-provisioning.md) (T4)
+- [`test-with-littlefs.md`](test-with-littlefs.md) (T4)

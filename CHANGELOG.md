@@ -6,7 +6,52 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-(Nothing yet — Tier 3 (networked ESP32 — WiFi, HTTP, MQTT) is next.)
+(Nothing yet — v1.0 shipped.)
+
+## [1.0.0] — 2026-05-05 — **🚀 v1.0**
+
+### Added — Tier 4 ships, all four tiers complete
+
+- **NVS / Preferences** — in-memory key/value store with namespaced
+  string/uint/int/bool typed access. `Preferences` Arduino class fully
+  compatible.
+- **Filesystem (LittleFS / SPIFFS-compat)** — in-memory file map; write/
+  read/exists/remove/mkdir/list_dir.
+- **Deep sleep** — `esp_sleep_enable_timer_wakeup`, `esp_deep_sleep_start`,
+  `esp_sleep_get_wakeup_cause`. Tests pre-set the next wake cause; sketch's
+  deep-sleep records duration + advances `last_wake`.
+- **Cooperative FreeRTOS shim** (per ADR D2 option a) — `xTaskCreate`,
+  `xTaskCreatePinnedToCore`, `vTaskDelay`, `xQueueCreate`/`Send`/`Receive`,
+  `xSemaphoreCreate{Binary,Counting,Mutex}`/`Take`/`Give`. Tasks don't run
+  in parallel; tests drive iterations explicitly.
+- **BLE stub** (per ADR D7 option a) — `BLEDevice::init`, `createServer`,
+  `createService`, `BLECharacteristic::setValue`/`getValue`/`notify`,
+  `BLEAdvertising`. Tests assert via `esp32sim::Ble`.
+- **`examples/07-deep-sleep-mqtt/`** — kitchen-sink reference: NVS-stored
+  WiFi creds, BLE-provisioning fallback, MQTT publish, 60 s deep sleep,
+  boot counter persisting across cycles.
+- 3 docs: `test-deep-sleep`, `test-ble-provisioning`, `test-with-littlefs`.
+
+### Notes
+- 150 framework tests + 21 example tests across 7 examples = **171 total
+  tests, all green** on Ubuntu CI.
+- BLE GATT peer fixture deferred to T4.5 (post-v1.0).
+- Bluetooth Classic, ULP coprocessor, ESP32 camera support: out of scope
+  for v1.0; documented as known gaps.
+
+## [0.4.0] — 2026-05-05
+
+### Added — Tier 3 ships
+- **WiFi / WiFiClient / WiFiServer fakes** with state machine, IPAddress,
+  `WL_*` status enum.
+- **HTTPClient fake** with `begin/GET/POST/getString`. Pre-seeded responses
+  via `Sim::Network::seed_http_response(url, ...)`.
+- **PubSubClient (MQTT) fake** with `setServer/connect/publish/subscribe/
+  loop`. `Sim::mqtt().deliver(topic, payload)` drives incoming messages.
+- `examples/06-mqtt-temperature/` — load-bearing T3 acceptance.
+- 2 docs: `test-a-wifi-sketch`, `test-mqtt`.
+- Path A simplified per [ADR-0004](docs/decisions/0004-pytest-plugin-control-channel.md):
+  in-process event recording (not Python mock servers, not real LWIP).
 
 ## [0.3.0] — 2026-05-05
 
