@@ -12,6 +12,14 @@
 #include <stdint.h>
 
 #ifdef __cplusplus
+// Pull in HardwareSerial transparently — real arduino-esp32's Arduino.h does
+// the same, so sketches expecting `Serial` to be available after
+// `#include <Arduino.h>` work without extra includes. (HardwareSerial.h is
+// guarded; safe to include redundantly.)
+#include <HardwareSerial.h>
+#endif
+
+#ifdef __cplusplus
 
 // Pin-level macros. Match arduino-esp32's values exactly.
 constexpr int LOW = 0;
