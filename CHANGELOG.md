@@ -6,7 +6,39 @@ All notable changes to this project will be documented in this file. The format 
 
 ## [Unreleased]
 
-(Nothing yet — Tier 1 (GPIO TDD) is next.)
+(Nothing yet — Tier 2 (sensor TDD + pytest-embedded plugin) is next.)
+
+## [0.2.0] — 2026-05-05
+
+### Added
+- **Tier 1 — GPIO TDD shipped.** A user's unmodified Arduino sketch using `pinMode`,
+  `digital{Read,Write}`, `Serial`, `millis`, `micros`, `delay`, `attachInterrupt` compiles
+  in `[env:native]` against our fakes; Unity tests can drive `setup()` / `loop()` and
+  assert on observable behavior. Sub-second feedback. **The TDD-for-ESP32 promise is real
+  for any sketch whose hardware footprint is GPIO + UART + timing.**
+- Core abstractions: `esp32sim::VirtualClock`, `EventLog`, `PinRegistry`, `UartChannel`.
+- Platform fakes: `Arduino.h`, `HardwareSerial.h` (with `Serial`, `Serial1`, `Serial2`
+  globals), `attachInterrupt`/`detachInterrupt`/`digitalPinToInterrupt`.
+- Public test API: `esp32sim::Sim` (in `<esp32sim_unity/esp32sim.h>`) — `reset`, `runSetup`,
+  `runLoop`, `runUntil`, `advanceMs`, `gpio(N)`, `uart(N)`, `events()`.
+- Three end-to-end reference examples — each pulls esp32-pio-emulator from GitHub via
+  `lib_deps`:
+  - `examples/01-blink/` — classic 1Hz blink (3 tests).
+  - `examples/02-button-debounce/` — 50ms debouncer (3 tests).
+  - `examples/03-serial-echo/` — UART read/write (3 tests).
+- Eight new documentation files under `docs/user/` and `docs/dev/`, including the
+  framework-vs-ArduinoFake explainer (per ADR-0003) and an interrupt-testing how-to.
+
+### Fixed
+- `INPUT_PULLUP` semantics: an external `setLevel(LOW)` now overrides the internal pull-up
+  (matches real hardware where an external driver wins). Discovered while bringing up
+  `examples/02-button-debounce/`.
+
+### Notes
+- 60 unit tests in the framework's own `test/` plus 9 end-to-end tests across the three
+  examples — 69 tests total, all green.
+- macOS-13 still deferred from CI per master spec D12; T1 introduced no platform-sensitive
+  code, so the deferral remains acceptable.
 
 ## [0.1.0] — 2026-05-05
 
