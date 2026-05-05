@@ -1,0 +1,32 @@
+# Reference copy of upstream AGENTS.md — not part of this repo
+.source-agents-md.reference
+
+# Build / test artifacts
+.pio/
+build/
+*.o
+*.obj
+*.a
+*.exe
+*.out
+
+# Editor
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+venv/
+*.egg-info/
+dist/
+
+# Secrets — never commit
+.env
+*.pem
+*.key
+secrets/
