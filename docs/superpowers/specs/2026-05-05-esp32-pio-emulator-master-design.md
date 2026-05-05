@@ -198,8 +198,8 @@ esp32-pio-emulator/
 ├── CLAUDE.md                               # task-handoff context (T0)
 ├── README.md                               # entry point (T0)
 ├── LICENSE                                 # MIT (T0)
-├── platformio.ini                          # native + esp32 envs
-├── library.json                            # PIO registry metadata
+├── platformio.ini                          # [env:native] only — we're a library
+├── library.json                            # PIO registry metadata; native-only
 ├── docs/                                   # Diátaxis split
 │   ├── README.md                           # the map
 │   ├── user/                               # ESP32 devs writing tests
@@ -213,24 +213,43 @@ esp32-pio-emulator/
 │   │   └── explanation/
 │   ├── decisions/                          # ADRs
 │   └── superpowers/specs/                  # design specs (this folder)
-├── core/
-│   ├── include/esp32sim/                   # public headers
-│   └── src/                                # implementations
-├── platforms/
-│   └── arduino-esp32/
-│       ├── include/                        # fake Arduino.h, WiFi.h, ...
-│       └── src/
+├── include/                                # public headers (PIO convention)
+│   ├── Arduino.h                           # the fake — load-bearing! sketches
+│   ├── HardwareSerial.h                    # `#include <Arduino.h>` and friends
+│   ├── Wire.h                              # resolve to these (T2+)
+│   ├── WiFi.h                              # (T3+)
+│   ├── esp32sim/                           # our own public sim API
+│   │   ├── esp32sim.h                      # umbrella header
+│   │   ├── clock.h                         # virtual clock (T1)
+│   │   ├── gpio.h                          # pin registry (T1)
+│   │   ├── event_log.h                     # event log (T1)
+│   │   ├── uart.h                          # UART channels (T1)
+│   │   └── ... (more added per tier)
+│   └── esp32sim_unity/                     # Unity harness public API
+│       └── esp32sim.h
+├── src/                                    # implementations (PIO convention)
+│   ├── core/                               # VirtualClock, EventLog, PinRegistry,
+│   │   ├── clock.cpp                       # I2CBus, SPIBus, UartChannel,
+│   │   ├── event_log.cpp                   # PeripheralRegistry, NetworkShim, ...
+│   │   ├── pin_registry.cpp                # framework-neutral primitives
+│   │   ├── uart_channel.cpp
+│   │   └── ... (more added per tier)
+│   ├── platforms/
+│   │   └── arduino_esp32/                  # Arduino HAL fakes — implementations
+│   │       ├── arduino.cpp                 # for the headers in include/
+│   │       ├── hardware_serial.cpp
+│   │       └── ...
+│   └── harness/
+│       └── unity/
+│           └── sim.cpp                     # ESP32Sim::* C++ API
 ├── harness/
-│   ├── unity/
-│   │   ├── include/esp32sim_unity/
-│   │   └── src/
-│   └── pytest_pio_emulator/                # T2+
-│       ├── pytest_pio_emulator/__init__.py
+│   └── pytest_pio_emulator/                # T2+ Python plugin (NOT under src/
+│       ├── pytest_pio_emulator/__init__.py # because PIO doesn't compile Python)
 │       └── pyproject.toml
-├── peripherals/                            # T2+ stateful fakes
-│   ├── bmp280/
-│   ├── mcp23017/
-│   └── ...
+├── peripherals/                            # T2+ stateful fakes (separate from
+│   ├── bmp280/                             # src/ because they're optional —
+│   ├── mcp23017/                           # consumers can include only what
+│   └── ...                                 # they need)
 ├── examples/                               # end-to-end at every tier
 │   ├── 01-blink/                           # T1
 │   ├── 02-button-debounce/                 # T1
@@ -238,14 +257,18 @@ esp32-pio-emulator/
 │   ├── 04-mqtt-temperature/                # T3
 │   └── 05-deep-sleep-ble-provision/        # T4
 ├── test/                                   # framework's own self-tests
-│   ├── core/
-│   ├── platforms/
-│   └── peripherals/
+│   ├── test_clock/
+│   ├── test_event_log/
+│   ├── test_pin_registry/
+│   ├── test_uart/
+│   └── test_skeleton/                      # the T0 smoke test
 └── .github/workflows/                      # CI
     └── ci.yml
 ```
 
-The split between `core/`, `platforms/`, `harness/`, and `peripherals/` is the architectural seam. Anything that knows about `Wire` lives in `platforms/`; anything that knows about I2C-as-a-protocol lives in `core/`; anything that knows about a specific I2C chip lives in `peripherals/`; anything that helps you test lives in `harness/`.
+The split between `src/core/`, `src/platforms/`, `src/harness/`, and `peripherals/` is the architectural seam. Anything that knows about `Wire` lives in `src/platforms/`; anything that knows about I2C-as-a-protocol lives in `src/core/`; anything that knows about a specific I2C chip lives in `peripherals/`; anything that helps you test lives in `src/harness/` (in-process Unity API) or `harness/pytest_pio_emulator/` (out-of-process Python plugin, T2+).
+
+**Why `src/` and `include/` at root, not `core/include/` etc.?** PlatformIO library convention is one `src/` and one `include/` at the project root. Consumers `lib_deps` us; PIO compiles `src/` and adds `include/` to the include path. The fake `Arduino.h` *must* be at `include/Arduino.h` so consumer sketches' `#include <Arduino.h>` resolves to our fake — there's no other way to honor "compile the unmodified sketch." Logical separation between core/platforms/harness is preserved via subdirectories within `src/`. (Earlier draft of this spec proposed `core/include/` etc.; that layout doesn't work with PIO library packaging — see master spec changelog v0.3.)
 
 ## 7. Tier roadmap
 
@@ -349,3 +372,4 @@ These are honest acceptance milestones because both projects are real, used, and
 | 2026-05-05 | v0.1 | Initial draft after brainstorming + OSS research |
 | 2026-05-05 | v0.2 | Added §11.5 reference projects (test candidates from user's portfolio). Resolved D5/D6/D8/D9/D10/D11/D12 — promoted to "Resolved" subtable. Added new D8 (ArduinoFake coexistence), D9 (C++17), D10 (pre-commit), D11 (Dockerfile), D12 (OS support). ESP32-S3 set as primary target in §3. |
 | 2026-05-05 | v0.2.1 | D12 amended during T0 implementation — CI matrix narrowed to Ubuntu-only because macOS-13 free runners were queueing 40+ minutes. macOS remains a supported OS for contributors; CI coverage returns when there is platform-sensitive code to test. |
+| 2026-05-05 | v0.3   | §6 repo layout restructured for PlatformIO library-packaging compatibility. The original layout (`core/include/`, `core/src/`, `platforms/arduino-esp32/include/`, etc.) doesn't work because PIO expects one `src/` and one `include/` at the project root. New layout uses top-level `src/` and `include/` with subdirectories preserving the architectural seam. Critically, the fake `Arduino.h` lives at `include/Arduino.h` — without this, consumer sketches' `#include <Arduino.h>` cannot resolve to our fake, and the "unmodified sketch" promise breaks. Discovered while planning T1 implementation; spec drift committed before T1 plan is written per AGENTS.md doctrine. |
