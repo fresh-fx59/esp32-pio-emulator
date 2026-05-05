@@ -62,6 +62,21 @@ typedef void (*voidFuncPtr)(void);
 void attachInterrupt(uint8_t interrupt_num, voidFuncPtr isr, int mode);
 void detachInterrupt(uint8_t interrupt_num);
 
+// ADC (T2 task 2). Default 12-bit resolution on ESP32-S3.
+int  analogRead(uint8_t pin);
+void analogReadResolution(uint8_t bits);
+void analogSetAttenuation(int atten);
+void analogSetPinAttenuation(uint8_t pin, int atten);
+
+// PWM / LEDC (T2 task 3).
+double  ledcSetup(uint8_t channel, double freq_hz, uint8_t resolution_bits);
+void    ledcAttachPin(uint8_t pin, uint8_t channel);
+void    ledcDetachPin(uint8_t pin);
+void    ledcWrite(uint8_t channel, uint32_t duty);
+uint32_t ledcRead(uint8_t channel);
+uint32_t ledcReadFreq(uint8_t channel);
+void    analogWrite(uint8_t pin, int val);  // 0-255, mapped onto channel 0
+
 #ifdef __cplusplus
 }  // extern "C"
 
