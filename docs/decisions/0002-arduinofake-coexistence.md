@@ -2,10 +2,11 @@
 
 | | |
 |---|---|
-| **Status** | Accepted |
+| **Status** | Superseded by [ADR-0003](0003-supersede-arduinofake-coexistence.md) (same day) |
 | **Date** | 2026-05-05 |
 | **Decision-maker** | fresh-fx59 (with Claude Opus 4.7), autonomous-mode decision |
 | **Supersedes** | — |
+| **Superseded by** | [ADR-0003](0003-supersede-arduinofake-coexistence.md) — operator feedback that this ADR over-rotated toward backward-compat at the cost of design clarity. See ADR-0003 for the corrected position. |
 
 ## Context
 

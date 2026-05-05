@@ -14,4 +14,5 @@ ADRs capture significant architectural choices: their context, the decision, the
 | ID | Status | Title |
 |---|---|---|
 | [0001](0001-esp32-s3-primary-target.md) | Accepted | ESP32-S3 as primary target |
-| [0002](0002-arduinofake-coexistence.md) | Accepted | Coexistence with ArduinoFake |
+| [0002](0002-arduinofake-coexistence.md) | Superseded by 0003 | Coexistence with ArduinoFake |
+| [0003](0003-supersede-arduinofake-coexistence.md) | Accepted | Supersede coexistence with ArduinoFake — we don't ship it as a dep |
