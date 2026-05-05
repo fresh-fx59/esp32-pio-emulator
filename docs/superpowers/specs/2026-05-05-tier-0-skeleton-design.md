@@ -87,10 +87,18 @@ Tier 0 is "shipped" when:
 4. `CHANGELOG.md` reflects the tag.
 5. The Tier 1 spec is reviewed and ready (this happens during T0 wrap-up — not blocking T0 acceptance, but expected to fall out naturally).
 
-## Open questions (T0-specific)
+## Resolved decisions
 
-- **Q-T0-1:** Do we want a `pre-commit` hook framework (`pre-commit.com`) wired in T0, or defer to T1? *Default: wire it in T0 with `clang-format` and `trailing-whitespace` hooks. Add more as we grow.*
-- **Q-T0-2:** Do we ship a `Dockerfile` for reproducible CI? *Default: no, GH Actions runners are sufficient for now. Revisit if CI flakiness emerges.*
-- **Q-T0-3:** Linux distros to support? *Default: Ubuntu 22.04+ LTS, macOS 13+. Document Windows as "should work via WSL2, untested" until someone actually tries.*
+(All previously-open T0 questions resolved per AGENTS.md decide-under-uncertainty + master-spec §11. See master spec's resolved-decisions table for the full register.)
 
-These are operator-decidable in autonomous mode per AGENTS.md "decide-under-uncertainty"; defaults shown are what we'll proceed with unless overridden.
+- **D10 — Pre-commit hooks:** wire in T0 via `pre-commit` framework. Initial hooks: `clang-format`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`. (Python `ruff` hook gets added in T2 when Python lands.) Critique: adds a contributor onboarding step; mitigation: documented in `docs/dev/tutorials/setting-up-dev-environment.md`, and CI also runs the same checks so a missed pre-commit is caught before merge.
+- **D11 — Dockerfile:** no. GH Actions Ubuntu and macOS runners are sufficient. Revisit only if CI flakiness emerges.
+- **D12 — OS support matrix:** Ubuntu 22.04+, macOS 13+. Windows via WSL2 documented as "should work, untested" until verified.
+- **D9 — C++ standard:** `-std=gnu++17` in `[env:native]`. Matches the user's mini-fork project; broadly supported on host compilers. Critique: gnu++17 vs c++17 — gnu extensions are widely used in Arduino code (e.g., `__attribute__`); standardize on the gnu variant to avoid mysterious build errors against arduino-esp32 sources.
+- **D6 — Formatters/linters:** clang-format LLVM-derived style, 100-col, indent=4 (matches user's existing C++ style); `ruff` for Python (lands in T2).
+- **D8 — ArduinoFake coexistence:** ArduinoFake (`fabiobatsilva/ArduinoFake @ ^0.3.1`) is added to `[env:native]` `lib_deps` from T0 onward, even though our own fakes don't need it yet. Rationale: (a) matches user's existing test-candidate setup, (b) lets users mix our behavioral fakes with ArduinoFake's call-recording mocks inside the same Unity test, (c) is a 2-line `lib_deps` change with no downside. See [ADR-0002](../../decisions/0002-arduinofake-coexistence.md).
+- **D5 — Variant target:** `esp32-s3-devkitc-1` is the implied target for any consumer who `lib_deps` us. Documented in `library.json` and in `README.md`. Other ESP32 variants are best-effort. See [ADR-0001](../../decisions/0001-esp32-s3-primary-target.md).
+
+## Test-candidate alignment
+
+The reference projects [`iot-yc-water-the-flowers-mini`](https://github.com/fresh-fx59/iot-yc-water-the-flowers-mini) and [`iot-yc-water-the-flowers`](https://github.com/fresh-fx59/iot-yc-water-the-flowers) are not exercised in T0 — that begins at T1. T0 just ensures the toolchain we'll use to test against them (PlatformIO native env, Unity, ArduinoFake, gnu++17) is wired and working in our own repo.

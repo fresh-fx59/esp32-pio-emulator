@@ -35,7 +35,7 @@ ESP32 developers today have these test paths, each with sharp tradeoffs:
 - **Cycle-accurate ISA emulation.** That's QEMU's job. We compile native.
 - **Replacing real-hardware QA.** Final validation happens on real boards.
 - **Replacing Wokwi.** Wokwi is excellent for visual prototyping; we are a test target, not a circuit playground.
-- **Multi-MCU support beyond ESP32 in v1.** Architecture leaves room for ESP32 variants (S2/S3/C3/C6) and a future ESP-IDF platform adapter, but v1 implementation targets the Arduino framework on classic ESP32.
+- **Multi-MCU support beyond ESP32 in v1.** Primary target is **ESP32-S3** (matches the test-candidate reference projects). Classic ESP32, S2, C3, C6 are best-effort: most peripherals share the arduino-esp32 unified API surface, but variant-specific differences (USB-OTG, RGB-LED on GPIO48, ADC pin counts, RMT channel counts) get nailed down at T2 entry. A future ESP-IDF platform adapter is out of scope for v1; the architecture leaves room for it.
 - **GUI.** Headless-only, CI-first.
 
 ## 4. Architecture
@@ -290,17 +290,47 @@ The framework itself is tested:
 
 CI runs the full matrix on Linux and macOS (ESP32 dev population is overwhelmingly on these).
 
-## 11. Open decisions (deferred)
+## 11. Decisions register
+
+### Resolved
+
+| # | Decision | Resolution | Captured in |
+|---|---|---|---|
+| D5 | ESP32 variant priority for v1 | **ESP32-S3 primary**, classic ESP32 / S2 / C3 / C6 best-effort. Variant-specific peripheral differences land at T2 entry. | [ADR-0001](../../decisions/0001-esp32-s3-primary-target.md) |
+| D6 | Code formatter / linter choice | clang-format LLVM style, 100-col, indent=4. Python: `ruff` (faster than black + flake8 combo, single tool). | T0 implementation (see [T0 spec](2026-05-05-tier-0-skeleton-design.md)) |
+| D8 | Coexistence with `ArduinoFake` (the FakeIt-based mocking lib already used in test-candidate repos) | **Coexist** — our framework provides behavioral fakes for sketch-level testing; ArduinoFake provides call-recording mocks for fine-grained verification *inside* Unity tests. They compose. | [ADR-0002](../../decisions/0002-arduinofake-coexistence.md) |
+| D9 | C++ standard | `gnu++17` — modern, matches the user's mini-fork project, broadly supported by host compilers. | T0 `platformio.ini` |
+| D10 | Pre-commit hook framework | Use `pre-commit` (pre-commit.com) with `clang-format`, `trailing-whitespace`, `end-of-file-fixer`, `check-yaml`, `ruff` (T2+) hooks. | T0 implementation |
+| D11 | Dockerfile for CI | Not in T0. GH Actions runners are sufficient. Revisit only if CI flakiness emerges. | This spec |
+| D12 | OS support matrix | Ubuntu 22.04+, macOS 13+. Windows via WSL2 documented as "should work, untested" until someone tries it. | This spec; CI matrix |
+
+### Deferred
 
 | # | Decision | Defer until | Capture as |
 |---|---|---|---|
 | D1 | T3 networking impl: Python mock servers vs real-LWIP-on-host | Tier 3 entry | ADR |
 | D2 | T4 RTOS impl: cooperative pseudo-scheduler vs FreeRTOS POSIX port | Tier 4 entry | ADR |
-| D3 | Project license confirmation (MIT assumed) | Pre-public-release | LICENSE file + AGENTS.md note |
+| D3 | Project license confirmation (MIT assumed) | Pre-public-release | `LICENSE` |
 | D4 | PlatformIO library registry namespace (`esp32-pio-emulator`) | Pre-public-release | `library.json` |
-| D5 | Whether to support ESP32 variants (S2/S3/C3/C6) explicitly in v1 | T2 entry (peripherals start to differ) | ADR |
-| D6 | Code formatter / linter choice (clang-format style, Python ruff vs black) | T0 implementation | settled in T0 plan |
 | D7 | T4 BLE simulation depth: stub-level vs behavioral (with Python BLE peer fixture) | Tier 4 entry | ADR |
+
+## 11.5 Reference projects (test candidates)
+
+Two real ESP32 projects from the user's portfolio serve as ongoing acceptance proof. As each tier ships, more of these projects' code becomes runnable in the simulator without modification:
+
+| Repo | Purpose | What it exercises |
+|---|---|---|
+| [`fresh-fx59/iot-yc-water-the-flowers-mini`](https://github.com/fresh-fx59/iot-yc-water-the-flowers-mini) | Single-zone watering controller (mini fork). ESP32-S3, gnu++17. | I2C (DS3231 RTC), ADC (moisture), GPIO (overflow), WiFi, HTTPS (Telegram bot, Prometheus push), LittleFS (web UI), NVS, OTA. |
+| [`fresh-fx59/iot-yc-water-the-flowers`](https://github.com/fresh-fx59/iot-yc-water-the-flowers) | Multi-tray watering controller with self-learning. ESP32-S3, gnu++11. | Same as mini + WS2812B (NeoPixel/RMT), state machines, WebSocket support, larger LittleFS web UI. |
+
+Both already use `[env:native]` with Unity + ArduinoFake; their existing native tests (~73KB, 20+ test cases) are the floor — our framework should make these tests *easier to write* and *more behaviorally faithful*, not replace them. Per-tier acceptance:
+
+- **T1** — extract the GPIO/Serial/timing-only logic from these projects (e.g., the overflow-sensor polling loop, the watering scheduler tick) and exercise it as an end-to-end T1 example.
+- **T2** — fake the DS3231 RTC and the moisture-ADC pin; run the watering controller's state machine in sim; assert phase transitions match the existing `test_state_machine.cpp` results.
+- **T3** — drive the Telegram notifier and Prometheus pusher against `pytest-httpserver` fixtures; assert the right HTTPS calls happen at the right times.
+- **T4** — boot the mini-fork sketch end-to-end, including LittleFS web UI serving and OTA flow, using only the simulator.
+
+These are honest acceptance milestones because both projects are real, used, and maintained. If a tier's milestones pass against them, the tier ships.
 
 ## 12. Glossary
 
@@ -317,3 +347,4 @@ CI runs the full matrix on Linux and macOS (ESP32 dev population is overwhelming
 | Date | Version | Change |
 |---|---|---|
 | 2026-05-05 | v0.1 | Initial draft after brainstorming + OSS research |
+| 2026-05-05 | v0.2 | Added §11.5 reference projects (test candidates from user's portfolio). Resolved D5/D6/D8/D9/D10/D11/D12 — promoted to "Resolved" subtable. Added new D8 (ArduinoFake coexistence), D9 (C++17), D10 (pre-commit), D11 (Dockerfile), D12 (OS support). ESP32-S3 set as primary target in §3. |
