@@ -5,7 +5,8 @@ Internal architecture, ABIs, file layout, contracts. *Information-oriented* (per
 
 ## Contents
 
-(Empty until T2.)
+- [`pytest-plugin-architecture.md`](pytest-plugin-architecture.md) (T2) — how the pytest-embedded plugin is structured.
 
-- *Coming in T2:* `control-protocol.md` (Python harness ⇄ C++ binary protocol)
-- *Coming in T2:* `repo-layout.md`
+*Coming later:*
+- T2.5: `control-protocol.md` (Python harness ⇄ C++ binary, when the control channel lands).
+- `repo-layout.md` (post-v1.0).
