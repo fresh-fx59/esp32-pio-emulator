@@ -2,17 +2,24 @@
 
 | | |
 |---|---|
-| **Status** | Draft v0.1 — pending user review |
-| **Date** | 2026-05-05 |
-| **Parent** | [Master design](2026-05-05-esp32-pio-emulator-master-design.md) |
-| **Depends on** | [Tier 1](2026-05-05-tier-1-gpio-tdd-design.md) shipped |
-| **Confidence** | Medium-high — detailed but expect to revisit at T2 entry |
+| **Status** | v0.2 — refreshed at T2 entry; implementation-ready |
+| **Date** | 2026-05-05 (v0.1 → v0.2) |
+| **Parent** | [Master design v0.3](2026-05-05-esp32-pio-emulator-master-design.md) |
+| **Depends on** | [Tier 1](2026-05-05-tier-1-gpio-tdd-design.md) shipped (v0.2.0) |
+| **Confidence** | Medium — implementation-ready; expect spec drift during T2 (especially around the pytest-embedded plugin) |
 
 ## Goal
 
 A developer can test code that talks to **bus-attached sensors** (I2C, SPI), reads analog inputs (ADC), drives PWM outputs (LEDC), reacts to hardware timers, and uses interrupt-driven peripherals. Stateful **fake peripherals** (BMP280, MCP23017 to start) respond like real chips would.
 
 In parallel, the **pytest-embedded service plugin** lands in alpha. The same sketch can now be tested two ways: in-process Unity for tight unit tests, out-of-process pytest-embedded for scenario tests that drive the simulated device from outside.
+
+## Changelog
+
+| Date | Version | Change |
+|---|---|---|
+| 2026-05-05 | v0.1 | Initial draft during brainstorming. |
+| 2026-05-05 | v0.2 | T2-entry refresh. (a) Peripheral fake set narrowed to DS3231 + BMP280 + MCP23017; SSD1306 + MPU6050 deferred to T2.5. (b) Reference example switched from generic BMP280 to RTC+moisture (matches user's test-candidate projects). (c) pytest-embedded plugin scope reduced to alpha-minimum (subprocess + dut.expect via stdout); richer control deferred. (d) Q-T2-1..5 resolved per AGENTS.md decide-under-uncertainty. (e) Spec-drift expectations section added. |
 
 ## Scope
 
@@ -27,18 +34,23 @@ In parallel, the **pytest-embedded service plugin** lands in alpha. The same ske
 | `attachInterrupt` (extended) | Now also fires on hardware events: SPI/I2C transactions, timer events, ADC threshold. |
 | `hw_timer_t`, `timerBegin`, `timerAttachInterrupt`, `timerAlarm`, `timerStart` | Hardware timers backed by `VirtualClock`. |
 
-### In — first stateful peripheral fakes (`peripherals/`)
+### In — peripheral fakes (`peripherals/`) — **prioritized for the test-candidate projects**
 
-| Fake | Real chip | Why it's first |
+The reference projects (`iot-yc-water-the-flowers*`) actually use **DS3231 RTC** (I2C) and analog moisture sensors (ADC) — not BMP280. T2 v0.2 prioritizes accordingly.
+
+| Fake | Real chip | Why |
 |---|---|---|
-| `FakeBMP280` | Bosch BMP280 (pressure + temp) | Most common ESP32 sensor in tutorials; covers I2C register-bank pattern. |
-| `FakeMCP23017` | Microchip MCP23017 (16-pin I/O expander) | Covers I2C with bidirectional GPIO; common in real projects. |
-| `FakeSSD1306` | OLED driver (SSD1306 over I2C) | Covers display semantics; gives users something visual. |
-| `FakeMPU6050` | InvenSense MPU6050 (IMU) | Covers DMP-style FIFO + larger register space; lays the pattern for sensor-with-state. |
+| `FakeDS3231` | Maxim DS3231 (precision I2C RTC + 32 KB EEPROM) | Used by the test-candidate projects. Covers I2C register-bank + time/date conversion + alarm interrupt pattern. **MUST-HAVE for T2 acceptance.** |
+| `FakeBMP280` | Bosch BMP280 (pressure + temp) | Iconic Arduino tutorial example. Covers I2C register-bank + calibration-coefficient + computed-output pattern. Adafruit_BMP280 library compatible. **MUST-HAVE — the canonical "first sensor" sample.** |
+| `FakeMCP23017` | Microchip MCP23017 (16-pin I/O expander) | I2C with bidirectional GPIO; teaches the pattern for "I2C peripheral that exposes pin-level state." **SHOULD-HAVE.** |
 
-### In — pytest-embedded plugin (alpha)
+**Deferred to T2.5 (post-T2 if no demand):** SSD1306 (display — complex graphics modeling, no user demand), MPU6050 (IMU FIFO — complex, no user demand). Pattern is documented in `dev/how-to/add-a-new-peripheral-fake.md` so a contributor or T2.5 can add them readily.
 
-The Python harness `harness/pytest_pio_emulator/` packaged as `pytest-pio-emulator`. Implements the pytest-embedded `Dut` interface so existing pytest-embedded users can target `--embedded-services pio_emulator` instead of `wokwi` / `qemu` / `esp` and run the same tests.
+### In — pytest-embedded plugin (alpha — minimal viable surface)
+
+The Python harness `harness/pytest_pio_emulator/` packaged as `pytest-pio-emulator`. **Alpha scope is deliberately minimal:** prove that the architecture works (Python launches a sim binary as a subprocess, reads its serial output, can be used in pytest fixtures), defer advanced fixtures (control-socket-driven time advancement, fixture-attached fake peripherals from Python) to T2.1 / T2.5.
+
+Alpha = enough to write `dut.expect("expected serial line")` against a sim binary. NOT alpha: `dut.sim.advance_time_ms(...)` or `dut.sim.attach_i2c(0x68, FakePeripheral())`.
 
 ```python
 # example: a scenario test that runs against the sim
@@ -127,37 +139,47 @@ class SimController:
 
 The control protocol between Python harness and C++ binary is a simple length-prefixed JSON-RPC over a Unix socket. Documented in `docs/dev/reference/control-protocol.md`.
 
-## Implementation steps
+## Implementation steps (v0.2 — focused)
 
-(13 steps; mirroring T1's pattern — each ends with verify + docs in same commit series.)
+12 tasks; each ends with verify + docs in same commit series per AGENTS.md.
 
-1. **`core/I2CBus` + tests** against direct C++.
-2. **`core/SPIBus` + tests**.
-3. **`platforms/arduino-esp32/Wire`** — `TwoWire` + globals `Wire`, `Wire1`.
-4. **`platforms/arduino-esp32/SPI`** — `SPIClass` + global `SPI`.
-5. **`peripherals/bmp280/FakeBMP280`** — register bank, chip ID, calibration coefficients per datasheet, pressure/temp formulas. Datasheet-conformance tests.
-6. **`peripherals/mcp23017/FakeMCP23017`** — register bank, IODIR / GPIO / GPPU / IPOL semantics. Conformance tests.
-7. **`peripherals/ssd1306/FakeSSD1306`** — frame buffer, command parser, "I drew this" introspection API.
-8. **`peripherals/mpu6050/FakeMPU6050`** — 6-axis register set; can drive simulated motion via test API.
-9. **ADC simulator + `analogRead*`**.
-10. **PWM/LEDC simulator + `ledc*` / `analogWrite`**.
-11. **Hardware timer simulator + `timer*`**.
-12. **`harness/pytest_pio_emulator/`** Python plugin — scaffold, `Dut` impl, control protocol C++-side. **This is the big step**; consider a feature branch with multiple commits.
-13. **End-to-end examples:**
-    - `examples/03-bmp280-logger/` — sketch reads BMP280, logs over Serial. Unity test + pytest-embedded scenario test.
-    - `examples/04-mcp23017-button-led/` — expander-driven button + LED.
-    - `examples/05-pwm-fade/` — LEDC fade.
-14. **Tier 2 sign-off:** docs (tutorials, how-tos for each new capability, control protocol reference), CHANGELOG, README, CLAUDE.md update.
+1. **`include/esp32sim/i2c.h` + `src/core/i2c_bus.cpp` — I2CBus core.** Two buses (Wire, Wire1). `attach(addr, device)`, `write`, `read`, `write_read` routes to attached `I2CDevice`s.
+2. **`include/Wire.h` + `src/platforms/arduino_esp32/wire.cpp`** — `TwoWire` class + globals `Wire`, `Wire1`. `beginTransmission`, `write`, `endTransmission`, `requestFrom`, `available`, `read`, `peek`. Forwards to I2CBus.
+3. **`include/esp32sim/adc.h` + `src/core/adc.cpp`** — ADC simulator. Tests drive analog values into pins via `Sim::adc(pin).setValue(v)`. Resolution + attenuation handling.
+4. **`include/Arduino.h` ADC funcs + impl** — `analogRead`, `analogReadResolution`, `analogSetAttenuation`. Forwards to core.
+5. **`include/esp32sim/pwm.h` + `src/core/pwm.cpp`** — PWM simulator. Tests query duty cycle + frequency via `Sim::pwm(channel).dutyCycle()`.
+6. **`include/Arduino.h` PWM funcs + impl** — `ledcSetup`, `ledcAttachPin`, `ledcWrite`, `analogWrite`. Forwards to core.
+7. **`include/esp32sim/spi.h` + `src/core/spi_bus.cpp`** — SPI bus simulator with CS routing.
+8. **`include/SPI.h` + `src/platforms/arduino_esp32/spi.cpp`** — `SPIClass` + global `SPI`. `beginTransaction`, `transfer`, `transfer16`, `endTransaction`.
+9. **Hardware timers** — `hw_timer_t`, `timerBegin`, `timerAttachInterrupt`, `timerAlarmWrite`, `timerAlarmEnable` backed by `VirtualClock::schedule_at`.
+10. **`peripherals/ds3231/FakeDS3231`** — register bank, time/date encoding (BCD), alarm registers. Datasheet-conformance tests.
+11. **`peripherals/bmp280/FakeBMP280`** — register bank, chip ID 0x58, calibration coefficients per datasheet, pressure/temp formulas. Adafruit_BMP280-library-compatible.
+12. **`peripherals/mcp23017/FakeMCP23017`** — IODIR/GPIO/GPPU/IPOL registers, bidirectional pin-level state.
+13. **`harness/pytest_pio_emulator/` Python plugin (alpha)** — Python package, subprocess Dut wrapping a `pio test` binary, `dut.expect()` against stdout. Documented in `dev/reference/pytest-plugin-architecture.md`.
+14. **End-to-end examples:**
+    - `examples/04-rtc-moisture-logger/` — sketch reads DS3231 + ADC, logs over Serial. Unity test + pytest-embedded scenario test (the load-bearing T2 acceptance proof).
+    - `examples/05-pwm-fade/` — LEDC fade demo.
+15. **Documentation** — peripheral.md reference, fake-an-i2c-sensor.md how-to, use-pytest-embedded.md how-to, fake-vs-mock-vs-emulate.md explanation, control-protocol-architecture.md dev reference, plus `add-a-new-peripheral-fake.md` so contributors can add SSD1306/MPU6050 later.
+16. **Tier 2 sign-off** — CHANGELOG 0.2.0 → 0.3.0, README + CLAUDE.md updates, tag `v0.3.0`.
 
-## Verification gate (Tier 2 acceptance)
+## Verification gate (Tier 2 acceptance — v0.2 sharpened)
 
 T2 ships when:
 
-- All four reference examples pass in CI **both ways** (Unity + pytest-embedded).
-- `pip install pytest-pio-emulator` works (or local equivalent if not yet on PyPI).
-- A user can drop in any of the four fakes by name, attach it, and have a stock Adafruit / SparkFun library against the real chip "just work".
-- Coverage of `core/`, `platforms/`, `peripherals/`, `harness/pytest_pio_emulator/` ≥ 80% lines.
-- The pytest-embedded plugin is documented in `docs/user/how-to/use-pytest-embedded.md` with side-by-side Unity vs pytest examples.
+- The two reference examples (04-rtc-moisture-logger, 05-pwm-fade) pass in CI.
+- `examples/04-rtc-moisture-logger/` runs **both** under `pio test -e native` (Unity) AND under `pytest` driving the same binary (pytest-embedded plugin alpha) — same sketch, two test surfaces. **This is the load-bearing acceptance proof.**
+- DS3231, BMP280, MCP23017 fakes pass datasheet-conformance tests in `test/test_peripherals_*/`.
+- A scratch consumer project that adds esp32-pio-emulator via lib_deps and uses `Wire` to read a fake DS3231 works end-to-end (mirrors T0's consumer-side smoke pattern).
+- `pip install -e harness/pytest_pio_emulator/` works locally; `pytest examples/04-rtc-moisture-logger/` runs the Python scenario test green.
+- Documentation: every new capability has the four Diátaxis quadrants populated for it.
+
+## Spec drift expectations
+
+I expect drift in T2 around three areas — flagged so we update the spec first per AGENTS.md:
+
+1. **The pytest-embedded plugin's exact integration pattern** — whether to use a control socket for stdin/stdout-based commands, a Unix domain socket for richer control, or just stdout-only. Decide at task 13 entry; record as `docs/decisions/0004-pytest-plugin-control-channel.md`.
+2. **DS3231 fake fidelity depth** — full register set (90 registers including alarm/control) vs minimum-viable (current time + temperature). Pick MV first; expand if user code exercises more.
+3. **MCP23017 vs separate IODIRA/IODIRB ↔ unified addressing modes (BANK=0 vs BANK=1)** — datasheet has both modes; default is BANK=0 (registers paired). Stick with the default; document the gap.
 
 ## Documentation deliverables
 
@@ -169,10 +191,12 @@ T2 ships when:
 - `docs/dev/reference/control-protocol.md` — wire format spec.
 - `docs/decisions/0001-pytest-embedded-plugin-architecture.md` — ADR.
 
-## Open questions (T2-specific)
+## Resolved decisions (T2)
 
-- **Q-T2-1:** Build invocation from the pytest plugin — call `pio run` directly, or use a `compile_commands.json` + cmake fallback? *Default: `pio run` for the v1 alpha. Add cmake fallback only if PlatformIO friction surfaces.*
-- **Q-T2-2:** Control protocol: JSON-RPC vs MessagePack vs Cap'n Proto? *Default: JSON-RPC over Unix socket. Trade verbosity for debuggability; revisit if perf becomes an issue.*
-- **Q-T2-3:** SPI device count per bus? *Default: support up to 4 simultaneously-attached SPI devices per bus. Document; expand if needed.*
-- **Q-T2-4:** Which fake do we make `examples/03-...` use? *Default: BMP280, because Adafruit's BMP280 library is canonical and the datasheet is well-known.*
-- **Q-T2-5:** Do we attempt I2C clock-stretching simulation? *Default: no in v1; document as a known gap. Re-evaluate at T3 entry.*
+(All Q-T2-* resolved per AGENTS.md decide-under-uncertainty in autonomous mode.)
+
+- **Q-T2-1 → Resolved:** pytest plugin invokes `pio test -e native` directly (not `pio run`). The test binary IS what we want to drive. cmake fallback deferred.
+- **Q-T2-2 → Resolved:** No separate control protocol in T2 alpha. Stdin/stdout-only — sufficient for `dut.expect()` workflows. Richer control (time advancement from Python, peripheral attach from Python) deferred to T2.5 with ADR-0004.
+- **Q-T2-3 → Resolved:** SPI supports up to 4 attached devices per bus. Documented.
+- **Q-T2-4 → Resolved:** Reference example uses **DS3231 + ADC** (matches user's test-candidate projects), not BMP280 alone. BMP280 fake still ships, used in unit tests.
+- **Q-T2-5 → Resolved:** No I2C clock-stretching simulation. Documented as a known gap in `what-this-does-and-doesnt-catch.md`.
