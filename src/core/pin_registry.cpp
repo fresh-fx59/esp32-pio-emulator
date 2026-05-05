@@ -18,12 +18,7 @@ void PinRegistry::reset() {
 
 int PinRegistry::get_level(int pin) const {
     if (!valid(pin)) return 0;
-    const auto& p = pins_[pin];
-    // INPUT_PULLUP/DOWN: if no driver has set a level, return the pull state.
-    // For T1 simplicity we don't track "is anyone driving this pin" — so a
-    // pullup pin reads high until set_level overrides it explicitly.
-    if (p.level == 0 && p.mode == PinMode::INPUT_PULLUP) return 1;
-    return p.level;
+    return pins_[pin].level;
 }
 
 void PinRegistry::set_level(int pin, int level) {
@@ -44,7 +39,15 @@ PinMode PinRegistry::get_mode(int pin) const {
 
 void PinRegistry::set_mode(int pin, PinMode m) {
     if (!valid(pin)) return;
-    pins_[pin].mode = m;
+    auto& p = pins_[pin];
+    p.mode = m;
+    // Pull resistors set the default level *at mode-change time*. An external
+    // driver (test setLevel, or attached peripheral) overrides this by calling
+    // set_level explicitly later, matching real hardware where an external
+    // signal wins over a weak internal pull. (This was a bug in the v0.1
+    // implementation that returned the pull value even after explicit drive.)
+    if (m == PinMode::INPUT_PULLUP) p.level = 1;
+    else if (m == PinMode::INPUT_PULLDOWN) p.level = 0;
     EventLog::instance().emit(Event{EventKind::GPIO_PIN_MODE, pin, (int)m});
 }
 
