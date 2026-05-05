@@ -8,69 +8,85 @@ preferences) with the *current* state of work.
 
 Build `esp32-pio-emulator`: a behavioral simulator for ESP32 firmware that runs natively on
 a developer's machine. The user's unmodified Arduino sketch compiles against host-side
-fakes; Unity tests (and from T2, pytest-embedded scenario tests) assert on observable
-behavior — pin levels, serial output, peripheral interactions, virtual time. See
-[`docs/superpowers/specs/2026-05-05-esp32-pio-emulator-master-design.md`](docs/superpowers/specs/2026-05-05-esp32-pio-emulator-master-design.md)
-for the full design.
+fakes; Unity tests assert on observable behavior — pin levels, serial output, peripheral
+interactions, virtual time. **Strict mode** (v1.1+) enables autonomous chip-contract
+enforcement so a sketch can be verified without authoring assertions.
+
+See [`docs/superpowers/specs/2026-05-05-esp32-pio-emulator-master-design.md`](docs/superpowers/specs/2026-05-05-esp32-pio-emulator-master-design.md)
+for the full architecture spec.
 
 ## Current state
 
-- **Active tier:** v1.0 SHIPPED. All four tiers complete. Project is at v1.0.0.
-- **Last shipped tier:** T4 full-chip (NVS, FS, deep-sleep, FreeRTOS shim, BLE stub).
-- **Last verified:** 162+ tests green across all tiers and examples.
+- **Latest release:** **v1.2.0** (2026-05-05).
+- **All four tiers shipped** (T0..T4 — capabilities documented in [README's status table](README.md#status)).
+- **Strict mode (v1.1) + severity classification (v1.2)** ship the autonomous-verification
+  experience: 21 chip-contract rules across GPIO/Serial/I2C/SPI/Time/WiFi/HTTP/MQTT/NVS/
+  PWM/BLE, classified as ERROR (must-fix) or WARNING (recommendation).
+- **187 tests passing** on Ubuntu CI (150 framework/example + 37 strict-mode rule tests).
+- **macOS-13 deferred from CI** per master spec D12; no platform-sensitive code yet
+  warrants re-adding it.
 
-## Post-v1.0 work
+## Future work (post-v1.2)
 
-- T2.5: pytest-embedded control channel (per ADR-0004).
-- T3.5: real-LWIP networking (Path B, per ADR-0005 if filed).
-- T4.5: behavioral BLE with Python-side GATT peer fixture.
-- Variant matrix expansion (S2/C3/C6 first-class testing).
-- macOS-13 back into CI matrix (per master spec D12) once a contributor
-  needs it.
+- **T2.5 — pytest plugin control channel** (per [ADR-0004](docs/decisions/0004-pytest-plugin-control-channel.md)):
+  Python-side virtual time advancement, peripheral attach, sketch stdin.
+- **T3.5 — real-LWIP networking** (Path B): replace event-recording HTTP/MQTT with
+  in-process socket fidelity. Capture as new ADR if started.
+- **T4.5 — behavioral BLE with GATT peer fixture**.
+- **Variant matrix:** S2/C3/C6 first-class beyond ESP32-S3.
+- **macOS-13** back in CI when a contributor exhibits a platform-sensitive code path.
+- **More peripheral fakes:** SSD1306, MPU6050, BME280, INA219 (deferred from T2).
+- **PlatformIO library-registry release** — currently consumed via GitHub URL; the
+  `library.json` `name` is reserved for `esp32-pio-emulator`.
+- **More strict-mode rules** (v1.3+ candidates): millis() rollover antipattern detection,
+  ISR-context tracking, return-value-ignored detection, resource-leak finalize hooks.
 
-See [`docs/superpowers/specs/2026-05-05-tier-3-networked-design.md`](docs/superpowers/specs/2026-05-05-tier-3-networked-design.md)
-for the current T3 spec (still v0.1 sketch; refresh to v0.2 before writing the T3 plan, per spec-drift policy).
+## Repository layout
 
-## What lives where
-
-| Path | Purpose |
-|---|---|
-| `docs/superpowers/specs/` | Design specs (master + per-tier) |
-| `docs/superpowers/plans/` | Implementation plans |
-| `docs/decisions/` | ADRs (immutable architecture decisions) |
-| `docs/user/` | User docs (Diátaxis: tutorials/how-to/reference/explanation) |
-| `docs/dev/` | Contributor docs (Diátaxis) |
-| `core/` | Behavioral sim engine (T1+) — virtual clock, event log, bus simulators |
-| `platforms/arduino-esp32/` | Arduino HAL fakes (T1+) |
-| `peripherals/` | Stateful peripheral fakes (T2+) — BMP280, MCP23017, etc. |
-| `harness/unity/` | C++ Unity assertion API (T1+) |
-| `harness/pytest_pio_emulator/` | Python pytest-embedded plugin (T2+) |
-| `examples/` | End-to-end reference sketches per tier |
-| `test/` | Framework's own self-tests |
-
-## What NOT to touch yet
-
-- Anything under `core/`, `platforms/`, `peripherals/`, `harness/`, `examples/` — those
-  directories don't exist yet; T0 is scaffolding only.
-- The other tier specs (T1–T4) — they're sketches that will be rewritten at their tier's
-  entry per the spec-drift policy.
+```
+esp32-pio-emulator/
+├── AGENTS.md, CLAUDE.md, README.md, CHANGELOG.md, LICENSE
+├── platformio.ini                 # [env:native] only — we're a library
+├── library.json                   # PIO library metadata; native-only
+├── include/                       # public headers (PIO convention)
+│   ├── Arduino.h                  # the load-bearing fake
+│   ├── HardwareSerial.h, Wire.h, SPI.h, WiFi.h, HTTPClient.h,
+│   ├── PubSubClient.h, BLEDevice.h, Preferences.h, esp_sleep.h,
+│   ├── esp32_hwtimer.h, freertos/{FreeRTOS,task,queue,semphr}.h
+│   ├── esp32sim/                  # public sim API
+│   │   └── {esp32sim,clock,event_log,gpio,i2c,spi,uart,adc,pwm,
+│   │        network,storage,sleep,rtos,ble,strict}.h
+│   └── esp32sim_unity/esp32sim.h  # Unity test API
+├── src/
+│   ├── core/                      # framework-neutral primitives
+│   ├── platforms/arduino_esp32/   # Arduino HAL fakes
+│   ├── peripherals/               # DS3231, BMP280, MCP23017
+│   └── harness/unity/             # ESP32Sim::* implementation
+├── harness/pytest_pio_emulator/   # Python pytest plugin (alpha)
+├── examples/                      # 7 worked examples (01-blink → 07-deep-sleep-mqtt)
+├── test/                          # framework's own self-tests
+├── docs/                          # Diátaxis split + specs/plans/decisions
+└── .github/workflows/ci.yml       # Ubuntu CI
+```
 
 ## Workflow
 
 - `AGENTS.md` defines durable preferences (subagent-driven plan execution, TDD default,
-  small commits, per-step verify-and-document, etc.).
-- Each tier follows: refresh spec → write plan → execute plan (subagent-driven) → verify →
-  commit → push → next tier.
-- Operator authorized sustained autonomous mode for this project — do not prompt between
-  phases. Surface only on real blockers or destructive actions.
+  small commits, per-step verify-and-document, spec-drift policy, decide-under-uncertainty,
+  critique-once).
+- For new tier work: refresh spec → writing-plans skill → execute (subagent-driven by
+  default) → verify → commit → push → tag → next.
+- Operator authorized sustained autonomous mode — do not prompt between phases. Surface
+  only on real blockers or destructive actions.
 
-## Quick verification
-
-The smoke test for "is this repo healthy at the current tier" is:
+## Quick verification commands
 
 ```bash
-pio test -e native           # green = T0+ skeleton works
+.venv/bin/pio test -e native                    # all 187 tests
+.venv/bin/pio test -e native --filter test_strict_mode  # the 37 strict-mode tests
+.venv/bin/pip install -e harness/pytest_pio_emulator    # install the pytest plugin alpha
 ```
 
-(After T0 ships. Before then, the equivalent is checking that all 14 T0 plan tasks are
-committed.)
+PlatformIO must be 6.x. The system `pio` on Ubuntu 24+ / Python 3.12 is broken; use the
+`.venv/` setup documented in
+[`docs/dev/tutorials/setting-up-dev-environment.md`](docs/dev/tutorials/setting-up-dev-environment.md).
